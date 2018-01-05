@@ -92,5 +92,22 @@ namespace Shuttle.Core.Pipelines.Tests
 
             Assert.Throws<NullReferenceException>(() => pipeline.RegisterStage("Stage").WithEvent(null));
         }
+
+        [Test]
+        public void Should_be_able_to_call_an_interfaced_observer()
+        {
+            var pipeline = new Pipeline();
+
+            pipeline.RegisterStage("Stage")
+                .WithEvent<MockPipelineEvent1>();
+
+            var interfacedObserver = new InterfacedObserver();
+
+            pipeline.RegisterObserver(interfacedObserver);
+
+            pipeline.Execute();
+
+            Assert.IsTrue(interfacedObserver.Called);
+        }
     }
 }

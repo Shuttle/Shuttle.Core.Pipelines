@@ -61,7 +61,12 @@ namespace Shuttle.Core.Pipelines
             var observerInterfaces = pipelineObserver.GetType().GetInterfaces();
 
             var implementedEvents = from i in observerInterfaces
-                where i.IsAssignableTo(typeof(IPipelineObserver<>))
+                where 
+                    i.IsAssignableTo(typeof(IPipelineObserver<>))
+                    &&
+                    i.IsGenericType
+                    &&
+                    i.Name.StartsWith("IPipelineObserver`")
                 select i;
 
             foreach (var @event in implementedEvents)
