@@ -34,17 +34,18 @@ namespace Shuttle.Core.Pipelines
                     _pool.Add(key, reusableObjects);
                 }
 
-                if (reusableObjects.Count > 0)
+                if (reusableObjects.Count <= 0)
                 {
-                    int lastIndex = reusableObjects.Count - 1;
-                    var reusableObject = reusableObjects[lastIndex];
-
-                    reusableObjects.RemoveAt(lastIndex);
-
-                    return reusableObject;
+                    return _factoryMethod?.Invoke(key);
                 }
 
-                return _factoryMethod?.Invoke(key);
+                var lastIndex = reusableObjects.Count - 1;
+                var reusableObject = reusableObjects[lastIndex];
+
+                reusableObjects.RemoveAt(lastIndex);
+
+                return reusableObject;
+
             }
         }
 
