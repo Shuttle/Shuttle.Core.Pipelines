@@ -28,23 +28,20 @@ namespace Shuttle.Core.Pipelines
 
             lock (Lock)
             {
-                if (!_pool.ContainsKey(key))
+                if (!_pool.TryGetValue(key, out var reusableObjects))
                 {
-                    _pool.Add(key, new List<TReusableObject>());
+                    reusableObjects = new List<TReusableObject>();
+                    _pool.Add(key, reusableObjects);
                 }
 
-                if (_pool.Count > 0)
+                if (reusableObjects.Count > 0)
                 {
-                    var reusableObjects = _pool[key];
+                    int lastIndex = reusableObjects.Count - 1;
+                    var reusableObject = reusableObjects[lastIndex];
 
-                    if (reusableObjects.Count > 0)
-                    {
-                        var reusableObject = reusableObjects[0];
+                    reusableObjects.RemoveAt(lastIndex);
 
-                        reusableObjects.RemoveAt(0);
-
-                        return reusableObject;
-                    }
+                    return reusableObject;
                 }
 
                 return _factoryMethod?.Invoke(key);
@@ -67,12 +64,14 @@ namespace Shuttle.Core.Pipelines
 
             lock (Lock)
             {
-                if (!_pool.ContainsKey(instance.GetType()))
+                var type = instance.GetType();
+                if (!_pool.TryGetValue(type, out var reusableObjects))
                 {
-                    _pool.Add(instance.GetType(), new List<TReusableObject>());
+                    reusableObjects = new List<TReusableObject>();
+                    _pool.Add(type, reusableObjects);
                 }
 
-                _pool[instance.GetType()].Add(instance);
+                reusableObjects.Add(instance);
             }
         }
     }
