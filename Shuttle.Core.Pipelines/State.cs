@@ -82,12 +82,12 @@ namespace Shuttle.Core.Pipelines
         {
             Guard.AgainstNull(key, nameof(key));
 
-            if (!Contains(key))
+            if (_state.TryGetValue(key, out object result))
             {
-                return default(TItem);
+                return (TItem) result;
             }
 
-            return (TItem) _state[key];
+            return default(TItem);
         }
 
         public bool Contains(string key)
