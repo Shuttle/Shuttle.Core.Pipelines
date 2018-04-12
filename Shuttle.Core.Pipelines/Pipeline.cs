@@ -24,8 +24,8 @@ namespace Shuttle.Core.Pipelines
         private readonly OnPipelineStarting _onPipelineStarting = new OnPipelineStarting();
         private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
 
-        protected readonly Dictionary<string, List<ObserverMethodInfoPair>> ObservedEvents =
-            new Dictionary<string, List<ObserverMethodInfoPair>>();
+        protected readonly Dictionary<Type, List<ObserverMethodInfoPair>> ObservedEvents =
+            new Dictionary<Type, List<ObserverMethodInfoPair>>();
 
         protected readonly List<IPipelineObserver> Observers = new List<IPipelineObserver>();
         protected readonly List<IPipelineStage> Stages = new List<IPipelineStage>();
@@ -72,15 +72,14 @@ namespace Shuttle.Core.Pipelines
             foreach (var @event in implementedEvents)
             {
                 var pipelineEventType = @event.GetGenericArguments()[0];
-                var pipelineEventName = pipelineEventType.FullName;
 
-                if (!ObservedEvents.TryGetValue(pipelineEventName ?? throw new InvalidOperationException(), out _))
+                if (!ObservedEvents.TryGetValue(pipelineEventType, out _))
                 {
-                    ObservedEvents.Add(pipelineEventName, new List<ObserverMethodInfoPair>());
+                    ObservedEvents.Add(pipelineEventType, new List<ObserverMethodInfoPair>());
                 }
 
                 var methodInfo = pipelineObserver.GetType().GetMethod("Execute", new[] {pipelineEventType});
-                ObservedEvents[pipelineEventName].Add(new ObserverMethodInfoPair(pipelineObserver, methodInfo));
+                ObservedEvents[pipelineEventType].Add(new ObserverMethodInfoPair(pipelineObserver, methodInfo));
             }
             return this;
         }
@@ -194,8 +193,7 @@ namespace Shuttle.Core.Pipelines
 
         private void RaiseEvent(IPipelineEvent @event, bool ignoreAbort = false)
         {
-            List<ObserverMethodInfoPair> observersForEvent;
-            ObservedEvents.TryGetValue(@event.GetType().FullName, out observersForEvent);
+            ObservedEvents.TryGetValue(@event.GetType(), out var observersForEvent);
 
             if (observersForEvent == null || observersForEvent.Count == 0)
             {
