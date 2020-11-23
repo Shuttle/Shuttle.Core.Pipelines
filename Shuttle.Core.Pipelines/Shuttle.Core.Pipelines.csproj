@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net46;net461;net462;net47;net471;netstandard2.0;netcoreapp2.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Shuttle.Core.Container" Version="10.0.8" />
-    <PackageReference Include="Shuttle.Core.Contract" Version="10.0.1" />
+    <PackageReference Include="Shuttle.Core.Container" Version="11.2.1" />
+    <PackageReference Include="Shuttle.Core.Contract" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>

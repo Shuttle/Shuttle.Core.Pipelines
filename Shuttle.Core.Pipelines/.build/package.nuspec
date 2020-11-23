@@ -16,8 +16,15 @@
     <copyright>Copyright (c) {year}, Eben Roux</copyright>
     <tags>shuttle</tags>
     <dependencies>
-      <dependency id="Shuttle.Core.Contract" version="{Shuttle.Core.Contract-version}" />
-      <dependency id="Shuttle.Core.Container" version="{Shuttle.Core.Container-version}" />
+      <group targetFramework="netstandard2.0">
+        <dependency id="Shuttle.Core.Contract" version="{Shuttle.Core.Contract-version}" />
+        <dependency id="Shuttle.Core.Container" version="{Shuttle.Core.Container-version}" />
+      </group>
+
+      <group targetFramework="netstandard2.1">
+        <dependency id="Shuttle.Core.Contract" version="{Shuttle.Core.Contract-version}" />
+        <dependency id="Shuttle.Core.Container" version="{Shuttle.Core.Container-version}" />
+      </group>
     </dependencies>
   </metadata>
 </package>
