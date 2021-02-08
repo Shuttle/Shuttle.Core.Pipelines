@@ -14,8 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Shuttle.Core.Container" Version="11.2.1" />
+    <PackageReference Include="Shuttle.Core.Container" Version="11.2.3" />
     <PackageReference Include="Shuttle.Core.Contract" Version="10.0.3" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
