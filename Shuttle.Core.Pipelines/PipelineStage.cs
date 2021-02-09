@@ -12,11 +12,12 @@ namespace Shuttle.Core.Pipelines
         public PipelineStage(string name)
         {
             Name = name;
+            Events = new ReadOnlyCollection<IPipelineEvent>(PipelineEvents);
         }
 
         public string Name { get; }
 
-        public IEnumerable<IPipelineEvent> Events => new ReadOnlyCollection<IPipelineEvent>(PipelineEvents);
+        public IEnumerable<IPipelineEvent> Events { get; }
 
         public IPipelineStage WithEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
         {

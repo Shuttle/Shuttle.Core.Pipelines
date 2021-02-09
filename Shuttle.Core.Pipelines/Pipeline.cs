@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using Shuttle.Core.Contract;
 using Shuttle.Core.Logging;
 using Shuttle.Core.Reflection;
@@ -24,8 +25,8 @@ namespace Shuttle.Core.Pipelines
         private readonly OnPipelineStarting _onPipelineStarting = new OnPipelineStarting();
         private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
 
-        protected readonly Dictionary<Type, List<ObserverMethodInfoPair>> ObservedEvents =
-            new Dictionary<Type, List<ObserverMethodInfoPair>>();
+        protected readonly Dictionary<Type, List<ObserverMethodInvoker>> ObservedEvents =
+            new Dictionary<Type, List<ObserverMethodInvoker>>();
 
         protected readonly List<IPipelineObserver> Observers = new List<IPipelineObserver>();
         protected readonly List<IPipelineStage> Stages = new List<IPipelineStage>();
@@ -75,11 +76,10 @@ namespace Shuttle.Core.Pipelines
 
                 if (!ObservedEvents.TryGetValue(pipelineEventType, out _))
                 {
-                    ObservedEvents.Add(pipelineEventType, new List<ObserverMethodInfoPair>());
+                    ObservedEvents.Add(pipelineEventType, new List<ObserverMethodInvoker>());
                 }
 
-                var methodInfo = pipelineObserver.GetType().GetMethod("Execute", new[] {pipelineEventType});
-                ObservedEvents[pipelineEventType].Add(new ObserverMethodInfoPair(pipelineObserver, methodInfo));
+                ObservedEvents[pipelineEventType].Add(new ObserverMethodInvoker(pipelineObserver, pipelineEventType));
             }
             return this;
         }
@@ -200,23 +200,22 @@ namespace Shuttle.Core.Pipelines
                 return;
             }
 
-            foreach (var observerPair in observersForEvent)
+            foreach (var observer in observersForEvent)
             {
-                var observer = observerPair.PipelineObserver;
                 if (_log.IsVerboseEnabled)
                 {
                     _log.Verbose(string.Format(_raisingPipelineEvent, @event.Name, StageName,
-                        observer.GetType().FullName));
+                        observer.GetObserverTypeName()));
                 }
 
                 try
                 {
-                    observerPair.MethodInfo.Invoke(observer, new object[] {@event});
+                    observer.Invoke(@event);
                 }
                 catch (Exception ex)
                 {
                     throw new PipelineException(
-                        string.Format(_raisingPipelineEvent, @event.Name, StageName, observer.GetType().FullName), ex);
+                        string.Format(_raisingPipelineEvent, @event.Name, StageName, observer.GetObserverTypeName()), ex);
                 }
                 if (Aborted && !ignoreAbort)
                 {
@@ -225,17 +224,40 @@ namespace Shuttle.Core.Pipelines
             }
         }
 
-        protected struct ObserverMethodInfoPair
+        protected struct ObserverMethodInvoker
         {
-            public IPipelineObserver PipelineObserver { get; }
+            private readonly IPipelineObserver _pipelineObserver;
 
-            public MethodInfo MethodInfo { get; }
+            private readonly InvokeHandler _invoker;
 
-            public ObserverMethodInfoPair(IPipelineObserver pipelineObserver, MethodInfo methodInfo)
+            private delegate void InvokeHandler(IPipelineObserver pipelineObserver, IPipelineEvent @event);
+
+            public ObserverMethodInvoker(IPipelineObserver pipelineObserver, Type pipelineEventType)
             {
-                PipelineObserver = pipelineObserver;
-                MethodInfo = methodInfo;
+                _pipelineObserver = pipelineObserver;
+                var pipelineObserverType = pipelineObserver.GetType();
+
+                var dynamicMethod = new DynamicMethod(string.Empty, 
+                    typeof(void), new[] { typeof(IPipelineObserver), typeof(IPipelineEvent) }, 
+                    typeof(IPipelineEvent).Module);
+        
+                var il = dynamicMethod.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldarg_1);
+
+                var methodInfo = pipelineObserverType.GetMethod("Execute", new[] {pipelineEventType});
+                il.EmitCall(OpCodes.Callvirt, methodInfo, null);
+                il.Emit(OpCodes.Ret);
+
+                _invoker = (InvokeHandler)dynamicMethod.CreateDelegate(typeof(InvokeHandler));
             }
+
+            public void Invoke(IPipelineEvent @event)
+            {
+                _invoker.Invoke(_pipelineObserver, @event);
+            }
+
+            public string GetObserverTypeName() => _pipelineObserver.GetType().FullName;
         }
     }
 }
