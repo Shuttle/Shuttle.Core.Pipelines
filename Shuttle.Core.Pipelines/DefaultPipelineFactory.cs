@@ -7,11 +7,18 @@ namespace Shuttle.Core.Pipelines
     public class DefaultPipelineFactory : IPipelineFactory
     {
         private readonly ReusableObjectPool<object> _pool;
-        private IComponentResolver _resolver;
+        private readonly IComponentResolver _resolver;
 
         public DefaultPipelineFactory()
         {
             _pool = new ReusableObjectPool<object>();
+        }
+
+        public DefaultPipelineFactory(IComponentResolver resolver)
+        {
+            Guard.AgainstNull(resolver, nameof(resolver));
+
+            _resolver = resolver;
         }
 
         public void OnPipelineCreated(object sender, PipelineEventArgs args)
@@ -29,19 +36,27 @@ namespace Shuttle.Core.Pipelines
             PipelineReleased.Invoke(sender, args);
         }
 
-        public event EventHandler<PipelineEventArgs> PipelineCreated = delegate { };
-        public event EventHandler<PipelineEventArgs> PipelineObtained = delegate { };
-        public event EventHandler<PipelineEventArgs> PipelineReleased = delegate { };
+        public event EventHandler<PipelineEventArgs> PipelineCreated = delegate
+        {
+        };
+
+        public event EventHandler<PipelineEventArgs> PipelineObtained = delegate
+        {
+        };
+
+        public event EventHandler<PipelineEventArgs> PipelineReleased = delegate
+        {
+        };
 
         public TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline
         {
-            var pipeline = (TPipeline) _pool.Get(typeof(TPipeline));
+            var pipeline = (TPipeline)_pool.Get(typeof(TPipeline));
 
             if (pipeline == null)
             {
                 var type = typeof(TPipeline);
 
-                pipeline = (TPipeline) GuardedComponentResolver().Resolve(type);
+                pipeline = (TPipeline)_resolver.Resolve(type);
 
                 if (pipeline == null)
                 {
@@ -72,25 +87,6 @@ namespace Shuttle.Core.Pipelines
             _pool.Release(pipeline);
 
             OnPipelineReleased(this, new PipelineEventArgs(pipeline));
-        }
-
-        public IPipelineFactory Assign(IComponentResolver resolver)
-        {
-            Guard.AgainstNull(resolver, nameof(resolver));
-
-            _resolver = resolver;
-
-            return this;
-        }
-
-        private IComponentResolver GuardedComponentResolver()
-        {
-            if (_resolver == null)
-            {
-                throw new InvalidOperationException(Resources.NullResolverException);
-            }
-
-            return _resolver;
         }
     }
 }
