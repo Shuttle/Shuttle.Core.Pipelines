@@ -9,16 +9,12 @@ namespace Shuttle.Core.Pipelines
         private readonly ReusableObjectPool<object> _pool;
         private readonly IComponentResolver _resolver;
 
-        public DefaultPipelineFactory()
-        {
-            _pool = new ReusableObjectPool<object>();
-        }
-
         public DefaultPipelineFactory(IComponentResolver resolver)
         {
             Guard.AgainstNull(resolver, nameof(resolver));
 
             _resolver = resolver;
+            _pool = new ReusableObjectPool<object>();
         }
 
         public void OnPipelineCreated(object sender, PipelineEventArgs args)
