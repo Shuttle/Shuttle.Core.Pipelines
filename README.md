@@ -25,7 +25,7 @@ Console.Write(state.Get<string>("my-key"));
 
 # Example
 
-Events *have* to derive from `PipelineEvent`.
+Events should derive from `PipelineEvent`.
 
 We will use the following events:
 

@@ -1,5 +1,5 @@
 using System;
-using Shuttle.Core.Container;
+using Microsoft.Extensions.DependencyInjection;
 using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines
@@ -7,13 +7,13 @@ namespace Shuttle.Core.Pipelines
     public class DefaultPipelineFactory : IPipelineFactory
     {
         private readonly ReusableObjectPool<object> _pool;
-        private readonly IComponentResolver _resolver;
+        private readonly IServiceProvider _provider;
 
-        public DefaultPipelineFactory(IComponentResolver resolver)
+        public DefaultPipelineFactory(IServiceProvider provider)
         {
-            Guard.AgainstNull(resolver, nameof(resolver));
+            Guard.AgainstNull(provider, nameof(provider));
 
-            _resolver = resolver;
+            _provider = provider;
             _pool = new ReusableObjectPool<object>();
         }
 
@@ -52,7 +52,7 @@ namespace Shuttle.Core.Pipelines
             {
                 var type = typeof(TPipeline);
 
-                pipeline = (TPipeline)_resolver.Resolve(type);
+                pipeline = (TPipeline)_provider.GetRequiredService(type);
 
                 if (pipeline == null)
                 {

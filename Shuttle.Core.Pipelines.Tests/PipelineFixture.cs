@@ -1,4 +1,7 @@
 using System;
+using System.Reflection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Shuttle.Core.Pipelines.Tests
@@ -9,7 +12,7 @@ namespace Shuttle.Core.Pipelines.Tests
         [Test]
         public void Should_be_able_to_execute_a_valid_pipeline()
         {
-            var pipeline = new Pipeline();
+            var pipeline = GetPipeline();
 
             pipeline
                 .RegisterStage("Stage")
@@ -26,10 +29,15 @@ namespace Shuttle.Core.Pipelines.Tests
             Assert.AreEqual("123", observer.CallSequence);
         }
 
+        private static Pipeline GetPipeline()
+        {
+            return new Pipeline(new Logger<Pipeline>(new NullLoggerFactory()));
+        }
+
         [Test]
         public void Should_be_able_to_register_events_after_existing_event()
         {
-            var pipeline = new Pipeline();
+            var pipeline = GetPipeline();
 
             pipeline.RegisterStage("Stage")
                 .WithEvent<MockPipelineEvent3>()
@@ -48,7 +56,7 @@ namespace Shuttle.Core.Pipelines.Tests
         [Test]
         public void Should_be_able_to_register_events_before_existing_event()
         {
-            var pipeline = new Pipeline();
+            var pipeline = GetPipeline();
 
             pipeline.RegisterStage("Stage")
                 .WithEvent<MockPipelineEvent1>();
@@ -70,7 +78,7 @@ namespace Shuttle.Core.Pipelines.Tests
         {
             Assert.Throws<InvalidOperationException>(
                 () =>
-                    new Pipeline().RegisterStage("Stage")
+                    GetPipeline().RegisterStage("Stage")
                         .AfterEvent<MockPipelineEvent1>()
                         .Register<MockPipelineEvent2>());
         }
@@ -80,7 +88,7 @@ namespace Shuttle.Core.Pipelines.Tests
         {
             Assert.Throws<InvalidOperationException>(
                 () =>
-                    new Pipeline().RegisterStage("Stage")
+                    GetPipeline().RegisterStage("Stage")
                         .BeforeEvent<MockPipelineEvent1>()
                         .Register<MockPipelineEvent2>());
         }
@@ -88,7 +96,7 @@ namespace Shuttle.Core.Pipelines.Tests
         [Test]
         public void Should_not_be_able_to_register_a_null_event()
         {
-            var pipeline = new Pipeline();
+            var pipeline = GetPipeline();
 
             Assert.Throws<NullReferenceException>(() => pipeline.RegisterStage("Stage").WithEvent(null));
         }
@@ -96,13 +104,13 @@ namespace Shuttle.Core.Pipelines.Tests
         [Test]
         public void Should_be_able_to_call_an_interfaced_observer()
         {
-            var pipeline = new Pipeline();
+            var pipeline = GetPipeline();
 
             pipeline.RegisterStage("Stage")
                 .WithEvent<MockPipelineEvent1>();
 
             var interfacedObserver = new InterfacedObserver();
-
+            
             pipeline.RegisterObserver(interfacedObserver);
 
             pipeline.Execute();
