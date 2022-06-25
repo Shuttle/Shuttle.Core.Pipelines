@@ -3,21 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Microsoft.Extensions.Logging;
 using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines
 {
     public class Pipeline : IPipeline
     {
-        private readonly ILogger<Pipeline> _logger;
-
-        private readonly string _enteringPipelineStage = Resources.EnteringPipelineStage;
-
-        private readonly string _executingPipeline = Resources.ExecutingPipeline;
-
-        private readonly string _firstChanceExceptionHandledByPipeline =  Resources.FirstChanceExceptionHandledByPipeline;
-
         private readonly OnAbortPipeline _onAbortPipeline = new OnAbortPipeline();
         private readonly OnPipelineException _onPipelineException = new OnPipelineException();
 
@@ -32,12 +23,8 @@ namespace Shuttle.Core.Pipelines
 
         private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
 
-        public Pipeline(ILogger<Pipeline> logger)
+        public Pipeline()
         {
-            Guard.AgainstNull(logger, nameof(logger));
-
-            _logger = logger;
-
             Id = Guid.NewGuid();
             State = new State();
 
@@ -104,19 +91,9 @@ namespace Shuttle.Core.Pipelines
             ExceptionHandled = false;
             Exception = null;
 
-            if (_logger.IsEnabled(LogLevel.Trace))
-            {
-                _logger.LogTrace(string.Format(_executingPipeline, GetType().FullName));
-            }
-
             foreach (var stage in Stages)
             {
                 StageName = stage.Name;
-
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace(string.Format(_enteringPipelineStage, StageName));
-                }
 
                 foreach (var @event in stage.Events)
                 {
@@ -142,19 +119,6 @@ namespace Shuttle.Core.Pipelines
                         Exception = ex.TrimLeading<TargetInvocationException>();
 
                         RaiseEvent(_onPipelineException, true);
-
-                        if (!ExceptionHandled)
-                        {
-                            _logger.LogCritical(string.Format(Resources.UnhandledPipelineException, @event.Name,
-                                ex.AllMessages()));
-
-                            throw;
-                        }
-
-                        if (_logger.IsEnabled(LogLevel.Trace))
-                        {
-                            _logger.LogTrace(string.Format(_firstChanceExceptionHandledByPipeline, ex.Message));
-                        }
 
                         if (Aborted)
                         {
@@ -204,12 +168,6 @@ namespace Shuttle.Core.Pipelines
 
             foreach (var observer in observersForEvent)
             {
-                if (_logger.IsEnabled(LogLevel.Trace))
-                {
-                    _logger.LogTrace(string.Format(_raisingPipelineEvent, @event.Name, StageName,
-                        observer.GetObserverTypeName()));
-                }
-
                 try
                 {
                     observer.Invoke(@event);

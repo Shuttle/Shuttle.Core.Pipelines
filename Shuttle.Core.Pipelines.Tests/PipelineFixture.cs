@@ -1,7 +1,5 @@
 using System;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Shuttle.Core.Pipelines.Tests
@@ -31,7 +29,7 @@ namespace Shuttle.Core.Pipelines.Tests
 
         private static Pipeline GetPipeline()
         {
-            return new Pipeline(new Logger<Pipeline>(new NullLoggerFactory()));
+            return new Pipeline();
         }
 
         [Test]

@@ -4,12 +4,12 @@ using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines
 {
-    public class DefaultPipelineFactory : IPipelineFactory
+    public class PipelineFactory : IPipelineFactory
     {
         private readonly ReusableObjectPool<object> _pool;
         private readonly IServiceProvider _provider;
 
-        public DefaultPipelineFactory(IServiceProvider provider)
+        public PipelineFactory(IServiceProvider provider)
         {
             Guard.AgainstNull(provider, nameof(provider));
 
