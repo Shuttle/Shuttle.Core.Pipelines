@@ -17,21 +17,6 @@ namespace Shuttle.Core.Pipelines
             _pool = new ReusableObjectPool<object>();
         }
 
-        public void OnPipelineCreated(object sender, PipelineEventArgs args)
-        {
-            PipelineCreated.Invoke(sender, args);
-        }
-
-        public void OnPipelineObtained(object sender, PipelineEventArgs args)
-        {
-            PipelineObtained.Invoke(sender, args);
-        }
-
-        public void OnPipelineReleased(object sender, PipelineEventArgs args)
-        {
-            PipelineReleased.Invoke(sender, args);
-        }
-
         public event EventHandler<PipelineEventArgs> PipelineCreated = delegate
         {
         };
@@ -66,11 +51,11 @@ namespace Shuttle.Core.Pipelines
                         string.Format(Resources.DuplicatePipelineInstanceException, type.FullName));
                 }
 
-                OnPipelineCreated(this, new PipelineEventArgs(pipeline));
+                PipelineCreated.Invoke(this, new PipelineEventArgs(pipeline));
             }
             else
             {
-                OnPipelineObtained(this, new PipelineEventArgs(pipeline));
+                PipelineObtained.Invoke(this, new PipelineEventArgs(pipeline));
             }
 
             return pipeline;
@@ -82,7 +67,7 @@ namespace Shuttle.Core.Pipelines
 
             _pool.Release(pipeline);
 
-            OnPipelineReleased(this, new PipelineEventArgs(pipeline));
+            PipelineReleased.Invoke(this, new PipelineEventArgs(pipeline));
         }
     }
 }
