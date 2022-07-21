@@ -79,6 +79,15 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Observer with type name &apos;{0}&apos; does not have an interface with name &apos;I{0}&apos;..
+        /// </summary>
+        public static string ObserverInterfaceMissingException {
+            get {
+                return ResourceManager.GetString("ObserverInterfaceMissingException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pipeline stage &apos;{0}&apos; has no event of type &apos;{1}&apos;..
         /// </summary>
         public static string PipelineStageEventNotRegistered {

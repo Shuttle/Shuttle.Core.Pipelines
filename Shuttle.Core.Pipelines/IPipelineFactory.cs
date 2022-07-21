@@ -10,5 +10,6 @@ namespace Shuttle.Core.Pipelines
 
         TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline;
         void ReleasePipeline(IPipeline pipeline);
+        void Flush();
     }
 }

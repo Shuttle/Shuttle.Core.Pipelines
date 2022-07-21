@@ -125,6 +125,10 @@
     <value>The IComponentResolver implementation returned null for pipeline of type '{0}'.</value>
     <comment>{0} = full type name of pipeline requested</comment>
   </data>
+  <data name="ObserverInterfaceMissingException" xml:space="preserve">
+    <value>Observer with type name '{0}' does not have an interface with name 'I{0}'.</value>
+    <comment>0 = observer type name</comment>
+  </data>
   <data name="PipelineStageEventNotRegistered" xml:space="preserve">
     <value>Pipeline stage '{0}' has no event of type '{1}'.</value>
     <comment>{0} = pipeline stage name, {1} = unknown event type name</comment>

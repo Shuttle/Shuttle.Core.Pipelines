@@ -6,14 +6,19 @@ namespace Shuttle.Core.Pipelines
 {
     public class PipelineFactory : IPipelineFactory
     {
-        private readonly ReusableObjectPool<object> _pool;
-        private readonly IServiceProvider _provider;
+        private ReusableObjectPool<object> _pool;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IPipelineModuleProvider _pipelineModuleProvider;
+        private static readonly object Lock = new object();
+        private static volatile bool _modulesResolved = false;
 
-        public PipelineFactory(IServiceProvider provider)
+        public PipelineFactory(IServiceProvider serviceProvider, IPipelineModuleProvider pipelineModuleProvider)
         {
-            Guard.AgainstNull(provider, nameof(provider));
+            Guard.AgainstNull(serviceProvider, nameof(serviceProvider));
+            Guard.AgainstNull(pipelineModuleProvider, nameof(pipelineModuleProvider));
 
-            _provider = provider;
+            _serviceProvider = serviceProvider;
+            _pipelineModuleProvider = pipelineModuleProvider;
             _pool = new ReusableObjectPool<object>();
         }
 
@@ -31,13 +36,26 @@ namespace Shuttle.Core.Pipelines
 
         public TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline
         {
+            lock (Lock)
+            {
+                if (!_modulesResolved)
+                {
+                    foreach (var moduleType in _pipelineModuleProvider.ModuleTypes)
+                    {
+                        _serviceProvider.GetRequiredService(moduleType);
+                    }
+
+                    _modulesResolved = true;
+                }
+            }
+
             var pipeline = (TPipeline)_pool.Get(typeof(TPipeline));
 
             if (pipeline == null)
             {
                 var type = typeof(TPipeline);
 
-                pipeline = (TPipeline)_provider.GetRequiredService(type);
+                pipeline = (TPipeline)_serviceProvider.GetRequiredService(type);
 
                 if (pipeline == null)
                 {
@@ -68,6 +86,13 @@ namespace Shuttle.Core.Pipelines
             _pool.Release(pipeline);
 
             PipelineReleased.Invoke(this, new PipelineEventArgs(pipeline));
+        }
+
+        public void Flush()
+        {
+            _pool.Dispose();
+
+            _pool = new ReusableObjectPool<object>();
         }
     }
 }
