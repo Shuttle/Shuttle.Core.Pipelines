@@ -5,7 +5,12 @@ using Shuttle.Core.Reflection;
 
 namespace Shuttle.Core.Pipelines
 {
-    public class ReusableObjectPool<TReusableObject> : IDisposable where TReusableObject : class
+    public abstract class ReusableObjectPool
+    {
+        protected static readonly object Lock = new object();
+    }
+
+    public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposable where TReusableObject : class
         
     {
         public void Dispose()
@@ -19,7 +24,6 @@ namespace Shuttle.Core.Pipelines
             }
         }
 
-        private static readonly object Lock = new object();
         private readonly Func<Type, TReusableObject> _factoryMethod;
         private readonly Dictionary<Type, List<TReusableObject>> _pool = new Dictionary<Type, List<TReusableObject>>();
 

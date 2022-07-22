@@ -87,6 +87,8 @@ namespace Shuttle.Core.Pipelines
                 ModuleTypes.Add(type);
             }
 
+            services.TryAddSingleton(type, type);
+
             return services;
         }
     }
