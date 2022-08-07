@@ -12,62 +12,18 @@ namespace Shuttle.Core.Pipelines
     {
         private static readonly List<Type> ModuleTypes = new List<Type>();
 
-        public static IServiceCollection AddPipelineProcessing(this IServiceCollection services, Assembly assembly)
+        public static IServiceCollection AddPipelineProcessing(this IServiceCollection services,
+            Action<PipelineProcessingBuilder> builder = null)
         {
             Guard.AgainstNull(services, nameof(services));
-            Guard.AgainstNull(assembly, nameof(assembly));
+
+            var pipelineProcessingBuilder = new PipelineProcessingBuilder(services);
+
+            builder?.Invoke(pipelineProcessingBuilder);
 
             services.TryAddSingleton<IPipelineFactory, PipelineFactory>();
 
-            var reflectionService = new ReflectionService();
-
-            foreach (var type in reflectionService.GetTypesAssignableTo<IPipeline>(assembly))
-            {
-                if (type.IsInterface || type.IsAbstract || services.Contains(ServiceDescriptor.Transient(type, type)))
-                {
-                    continue;
-                }
-
-                services.AddTransient(type, type);
-            }
-
-            AddPipelineObservers(services, assembly);
-
             services.AddSingleton<IPipelineModuleProvider>(serviceProvider => new PipelineModuleProvider(ModuleTypes));
-
-            return services;
-        }
-
-        public static IServiceCollection AddPipelineObservers(this IServiceCollection services, Assembly assembly)
-        {
-            Guard.AgainstNull(services, nameof(services));
-            Guard.AgainstNull(assembly, nameof(assembly));
-
-            var reflectionService = new ReflectionService();
-
-            foreach (var type in reflectionService.GetTypesAssignableTo<IPipelineObserver>(assembly))
-            {
-                if (type.IsInterface || type.IsAbstract)
-                {
-                    continue;
-                }
-
-                var interfaceType = type.InterfaceMatching($"I{type.Name}");
-
-                if (interfaceType != null)
-                {
-                    if (services.Contains(ServiceDescriptor.Transient(interfaceType, type)))
-                    {
-                        continue;
-                    }
-
-                    services.AddTransient(interfaceType, type);
-                }
-                else
-                {
-                    throw new InvalidOperationException(string.Format(Resources.ObserverInterfaceMissingException, type.Name));
-                }
-            }
 
             return services;
         }
