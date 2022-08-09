@@ -88,7 +88,6 @@ namespace Shuttle.Core.Pipelines
             var result = true;
 
             Aborted = false;
-            ExceptionHandled = false;
             Exception = null;
 
             foreach (var stage in Stages)
@@ -118,14 +117,23 @@ namespace Shuttle.Core.Pipelines
 
                         Exception = ex.TrimLeading<TargetInvocationException>();
 
+                        ExceptionHandled = false;
+                        
                         RaiseEvent(_onPipelineException, true);
 
-                        if (Aborted)
+                        if (!ExceptionHandled)
                         {
-                            RaiseEvent(_onAbortPipeline);
-
-                            break;
+                            throw;
                         }
+
+                        if (!Aborted)
+                        {
+                            continue;
+                        }
+
+                        RaiseEvent(_onAbortPipeline);
+
+                        break;
                     }
                 }
 
