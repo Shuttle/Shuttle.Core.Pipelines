@@ -19,7 +19,7 @@ namespace Shuttle.Core.Pipelines {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -70,33 +70,6 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Entering pipeline stage &apos;{0}&apos;..
-        /// </summary>
-        public static string EnteringPipelineStage {
-            get {
-                return ResourceManager.GetString("EnteringPipelineStage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Executing pipeline &apos;{0}&apos;..
-        /// </summary>
-        public static string ExecutingPipeline {
-            get {
-                return ResourceManager.GetString("ExecutingPipeline", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to First chance exception handled by pipeline: {0}.
-        /// </summary>
-        public static string FirstChanceExceptionHandledByPipeline {
-            get {
-                return ResourceManager.GetString("FirstChanceExceptionHandledByPipeline", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The IComponentResolver implementation returned null for pipeline of type &apos;{0}&apos;..
         /// </summary>
         public static string NullPipelineException {
@@ -106,11 +79,11 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No `IComponentResolver` implementation has been assigned to the DefaultPipelineFactory..
+        ///   Looks up a localized string similar to Observer with type name &apos;{0}&apos; does not have an interface with name &apos;I{0}&apos;..
         /// </summary>
-        public static string NullResolverException {
+        public static string ObserverInterfaceMissingException {
             get {
-                return ResourceManager.GetString("NullResolverException", resourceCulture);
+                return ResourceManager.GetString("ObserverInterfaceMissingException", resourceCulture);
             }
         }
         

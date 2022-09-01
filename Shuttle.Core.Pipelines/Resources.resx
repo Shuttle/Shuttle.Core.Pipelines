@@ -121,24 +121,13 @@
     <value>The IComponentResolver implementation returned the same pipeline instance of type '{0}'.  Since pipelines are not stateless that cannot be shared.  Please register the pipeline types as transient.</value>
     <comment>{0} = pipeline type</comment>
   </data>
-  <data name="EnteringPipelineStage" xml:space="preserve">
-    <value>Entering pipeline stage '{0}'.</value>
-    <comment>{0} = pipeline stage</comment>
-  </data>
-  <data name="ExecutingPipeline" xml:space="preserve">
-    <value>Executing pipeline '{0}'.</value>
-    <comment>{0} = pipeline full type name</comment>
-  </data>
-  <data name="FirstChanceExceptionHandledByPipeline" xml:space="preserve">
-    <value>First chance exception handled by pipeline: {0}</value>
-    <comment>{0} = exception message</comment>
-  </data>
   <data name="NullPipelineException" xml:space="preserve">
     <value>The IComponentResolver implementation returned null for pipeline of type '{0}'.</value>
     <comment>{0} = full type name of pipeline requested</comment>
   </data>
-  <data name="NullResolverException" xml:space="preserve">
-    <value>No `IComponentResolver` implementation has been assigned to the DefaultPipelineFactory.</value>
+  <data name="ObserverInterfaceMissingException" xml:space="preserve">
+    <value>Observer with type name '{0}' does not have an interface with name 'I{0}'.</value>
+    <comment>0 = observer type name</comment>
   </data>
   <data name="PipelineStageEventNotRegistered" xml:space="preserve">
     <value>Pipeline stage '{0}' has no event of type '{1}'.</value>

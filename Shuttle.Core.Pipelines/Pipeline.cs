@@ -4,21 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Shuttle.Core.Contract;
-using Shuttle.Core.Logging;
-using Shuttle.Core.Reflection;
 
 namespace Shuttle.Core.Pipelines
 {
     public class Pipeline : IPipeline
     {
-        private readonly string _enteringPipelineStage = Resources.EnteringPipelineStage;
-
-        private readonly string _executingPipeline = Resources.ExecutingPipeline;
-
-        private readonly string _firstChanceExceptionHandledByPipeline =
-            Resources.FirstChanceExceptionHandledByPipeline;
-
-        private readonly ILog _log;
         private readonly OnAbortPipeline _onAbortPipeline = new OnAbortPipeline();
         private readonly OnPipelineException _onPipelineException = new OnPipelineException();
 
@@ -31,10 +21,13 @@ namespace Shuttle.Core.Pipelines
         protected readonly List<IPipelineObserver> Observers = new List<IPipelineObserver>();
         protected readonly List<IPipelineStage> Stages = new List<IPipelineStage>();
 
+        private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
+
         public Pipeline()
         {
             Id = Guid.NewGuid();
             State = new State();
+
             _onAbortPipeline.Reset(this);
             _onPipelineException.Reset(this);
 
@@ -43,8 +36,6 @@ namespace Shuttle.Core.Pipelines
             stage.WithEvent(_onPipelineStarting);
 
             Stages.Add(stage);
-
-            _log = Log.For(this);
         }
 
         public Guid Id { get; }
@@ -62,11 +53,9 @@ namespace Shuttle.Core.Pipelines
             var observerInterfaces = pipelineObserver.GetType().GetInterfaces();
 
             var implementedEvents = from i in observerInterfaces
-                where 
-                    i.IsAssignableTo(typeof(IPipelineObserver<>))
-                    &&
-                    i.IsGenericType
-                    &&
+                where
+                    i.IsGenericType &&
+                    _pipelineObserverType.GetTypeInfo().IsAssignableFrom(i.GetGenericTypeDefinition()) &&
                     i.Name.StartsWith("IPipelineObserver`")
                 select i;
 
@@ -99,22 +88,11 @@ namespace Shuttle.Core.Pipelines
             var result = true;
 
             Aborted = false;
-            ExceptionHandled = false;
             Exception = null;
-
-            if (_log.IsVerboseEnabled)
-            {
-                _log.Verbose(string.Format(_executingPipeline, GetType().FullName));
-            }
 
             foreach (var stage in Stages)
             {
                 StageName = stage.Name;
-
-                if (_log.IsVerboseEnabled)
-                {
-                    _log.Verbose(string.Format(_enteringPipelineStage, StageName));
-                }
 
                 foreach (var @event in stage.Events)
                 {
@@ -139,27 +117,23 @@ namespace Shuttle.Core.Pipelines
 
                         Exception = ex.TrimLeading<TargetInvocationException>();
 
+                        ExceptionHandled = false;
+                        
                         RaiseEvent(_onPipelineException, true);
 
                         if (!ExceptionHandled)
                         {
-                            _log.Fatal(string.Format(Resources.UnhandledPipelineException, @event.Name,
-                                ex.AllMessages()));
-
                             throw;
                         }
 
-                        if (_log.IsVerboseEnabled)
+                        if (!Aborted)
                         {
-                            _log.Verbose(string.Format(_firstChanceExceptionHandledByPipeline, ex.Message));
+                            continue;
                         }
 
-                        if (Aborted)
-                        {
-                            RaiseEvent(_onAbortPipeline);
+                        RaiseEvent(_onAbortPipeline);
 
-                            break;
-                        }
+                        break;
                     }
                 }
 
@@ -202,12 +176,6 @@ namespace Shuttle.Core.Pipelines
 
             foreach (var observer in observersForEvent)
             {
-                if (_log.IsVerboseEnabled)
-                {
-                    _log.Verbose(string.Format(_raisingPipelineEvent, @event.Name, StageName,
-                        observer.GetObserverTypeName()));
-                }
-
                 try
                 {
                     observer.Invoke(@event);
@@ -224,7 +192,7 @@ namespace Shuttle.Core.Pipelines
             }
         }
 
-        protected struct ObserverMethodInvoker
+        protected readonly struct ObserverMethodInvoker
         {
             private readonly IPipelineObserver _pipelineObserver;
 
@@ -235,6 +203,7 @@ namespace Shuttle.Core.Pipelines
             public ObserverMethodInvoker(IPipelineObserver pipelineObserver, Type pipelineEventType)
             {
                 _pipelineObserver = pipelineObserver;
+                
                 var pipelineObserverType = pipelineObserver.GetType();
 
                 var dynamicMethod = new DynamicMethod(string.Empty, 

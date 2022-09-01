@@ -1,13 +1,29 @@
 using System;
 using System.Collections.Generic;
 using Shuttle.Core.Contract;
+using Shuttle.Core.Reflection;
 
 namespace Shuttle.Core.Pipelines
 {
-    public class ReusableObjectPool<TReusableObject>
-        where TReusableObject : class
+    public abstract class ReusableObjectPool
     {
-        private static readonly object Lock = new object();
+        protected static readonly object Lock = new object();
+    }
+
+    public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposable where TReusableObject : class
+        
+    {
+        public void Dispose()
+        {
+            foreach (var value in _pool.Values)
+            {
+                value.ForEach(item =>
+                {
+                    item.AttemptDispose();
+                });
+            }
+        }
+
         private readonly Func<Type, TReusableObject> _factoryMethod;
         private readonly Dictionary<Type, List<TReusableObject>> _pool = new Dictionary<Type, List<TReusableObject>>();
 

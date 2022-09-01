@@ -6,7 +6,60 @@ PM> Install-Package Shuttle.Core.Pipelines
 
 Observable event-based pipelines based broadly on pipes and filters.
 
-The `Pipeline` class is defined in the `Shuttle.Core.Infrastructure` package.
+## Configuration
+
+In order to more easily make use of pipelines an implementation of the `IPipelineFactory` should be used.  The following will register the `PipelineFactory` implementation:
+
+```c#
+services.AddPipelineProcessing(builder => {
+    builder.AddAssembly(assembly);
+});
+```
+
+This will register the `IPipelineFactory` and, using the builder, add all `IPipeline` and `IPipelineObserver` implementations as `Transient`.  The pipeline instances are re-used as they are kept in a pool.
+
+Since pipelines are quite frequently extended by adding observers a *module* may be added that adds the relevant observers to a pipeline on creation:
+
+```c#
+services.AddPipelineModule<T>();
+services.AddPipelineModule(type);
+```
+
+The way this is accomplished is having a module such as the following:
+
+```c#
+public class SomeModule
+{
+    private readonly Type _pipelineType = typeof(InterestingPipeline);
+
+    public SomeModule(IPipelineFactory pipelineFactory)
+    {
+        Guard.AgainstNull(pipelineFactory, nameof(pipelineFactory));
+
+        pipelineFactory.PipelineCreated += PipelineCreated;
+    }
+
+    private void PipelineCreated(object sender, PipelineEventArgs e)
+    {
+        var pipelineType = ;
+
+        if (e.Pipeline.GetType() != _pipelineType
+        {
+            return;
+        }
+
+        e.Pipeline.RegisterObserver(new SomeObserver());
+    }
+}
+```
+
+The above module could be added to the `IServiceCollection` as follows:
+
+```c#
+services.AddPipelineModule<SomeModule>();
+```
+
+## Overview
 
 A `Pipeline` is a variation of the pipes and filters pattern and consists of 1 or more stages that each contain one or more events.  When the pipeline is executed each event in each stage is raised in the order that they were registered.  One or more observers should be registered to handle the relevant event(s).
 
@@ -23,9 +76,9 @@ Console.WriteLine(state.Get<List<string>>()[0]);
 Console.Write(state.Get<string>("my-key"));
 ```
 
-# Example
+## Example
 
-Events *have* to derive from `PipelineEvent`.
+Events should derive from `PipelineEvent`.
 
 We will use the following events:
 
