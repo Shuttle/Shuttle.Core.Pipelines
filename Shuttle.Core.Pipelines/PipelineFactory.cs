@@ -34,6 +34,10 @@ namespace Shuttle.Core.Pipelines
         {
         };
 
+        public event EventHandler<ModulesResolvedEventArgs> ModulesResolved = delegate
+        {
+        };
+
         public TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline
         {
             lock (Lock)
@@ -46,6 +50,8 @@ namespace Shuttle.Core.Pipelines
                     }
 
                     _modulesResolved = true;
+
+                    ModulesResolved.Invoke(this, new ModulesResolvedEventArgs(_pipelineModuleProvider.ModuleTypes));
                 }
             }
 
