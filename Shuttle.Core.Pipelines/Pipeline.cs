@@ -49,7 +49,10 @@ namespace Shuttle.Core.Pipelines
 
         public IPipeline RegisterObserver(IPipelineObserver pipelineObserver)
         {
+            Guard.AgainstNull(pipelineObserver, nameof(pipelineObserver));
+
             Observers.Add(pipelineObserver);
+
             var observerInterfaces = pipelineObserver.GetType().GetInterfaces();
 
             var implementedEvents = from i in observerInterfaces
@@ -148,6 +151,8 @@ namespace Shuttle.Core.Pipelines
 
         public IPipelineStage RegisterStage(string name)
         {
+            Guard.AgainstNullOrEmptyString(name, nameof(name));
+
             var stage = new PipelineStage(name);
 
             Stages.Add(stage);
@@ -157,6 +162,8 @@ namespace Shuttle.Core.Pipelines
 
         public IPipelineStage GetStage(string name)
         {
+            Guard.AgainstNullOrEmptyString(name, nameof(name));
+
             var result = Stages.Find(stage => stage.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
             Guard.Against<IndexOutOfRangeException>(result == null,

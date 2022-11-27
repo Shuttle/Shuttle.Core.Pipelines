@@ -10,9 +10,7 @@ namespace Shuttle.Core.Pipelines
 
         public IPipelineEvent Reset(IPipeline pipeline)
         {
-            Guard.AgainstNull(pipeline, nameof(pipeline));
-
-            Pipeline = pipeline;
+            Pipeline = Guard.AgainstNull(pipeline, nameof(pipeline));
 
             return this;
         }

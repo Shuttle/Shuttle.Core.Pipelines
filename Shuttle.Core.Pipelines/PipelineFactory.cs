@@ -14,11 +14,8 @@ namespace Shuttle.Core.Pipelines
 
         public PipelineFactory(IServiceProvider serviceProvider, IPipelineModuleProvider pipelineModuleProvider)
         {
-            Guard.AgainstNull(serviceProvider, nameof(serviceProvider));
-            Guard.AgainstNull(pipelineModuleProvider, nameof(pipelineModuleProvider));
-
-            _serviceProvider = serviceProvider;
-            _pipelineModuleProvider = pipelineModuleProvider;
+            _serviceProvider = Guard.AgainstNull(serviceProvider, nameof(serviceProvider));
+            _pipelineModuleProvider = Guard.AgainstNull(pipelineModuleProvider, nameof(pipelineModuleProvider));
             _pool = new ReusableObjectPool<object>();
         }
 

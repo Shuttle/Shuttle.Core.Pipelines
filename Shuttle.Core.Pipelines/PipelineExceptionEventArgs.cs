@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shuttle.Core.Contract;
+using System;
 
 namespace Shuttle.Core.Pipelines
 {
@@ -6,7 +7,7 @@ namespace Shuttle.Core.Pipelines
     {
         public PipelineExceptionEventArgs(IPipeline pipeline)
         {
-            Pipeline = pipeline;
+            Pipeline = Guard.AgainstNull(pipeline, nameof(pipeline));
         }
 
         public IPipeline Pipeline { get; }

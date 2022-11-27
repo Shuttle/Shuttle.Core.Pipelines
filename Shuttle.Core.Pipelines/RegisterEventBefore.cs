@@ -10,8 +10,8 @@ namespace Shuttle.Core.Pipelines
 
         public RegisterEventBefore(List<IPipelineEvent> eventsToExecute, IPipelineEvent pipelineEvent)
         {
-            _eventsToExecute = eventsToExecute;
-            _pipelineEvent = pipelineEvent;
+            _eventsToExecute = Guard.AgainstNull(eventsToExecute, nameof(eventsToExecute));
+            _pipelineEvent = Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent));
         }
 
         public void Register<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()

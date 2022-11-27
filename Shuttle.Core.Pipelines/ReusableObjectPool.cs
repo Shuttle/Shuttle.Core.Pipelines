@@ -11,7 +11,6 @@ namespace Shuttle.Core.Pipelines
     }
 
     public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposable where TReusableObject : class
-        
     {
         public void Dispose()
         {
@@ -33,9 +32,7 @@ namespace Shuttle.Core.Pipelines
 
         public ReusableObjectPool(Func<Type, TReusableObject> factoryMethod)
         {
-            Guard.AgainstNull(factoryMethod, nameof(factoryMethod));
-
-            _factoryMethod = factoryMethod;
+            _factoryMethod = Guard.AgainstNull(factoryMethod, nameof(factoryMethod));
         }
 
         public TReusableObject Get(Type key)

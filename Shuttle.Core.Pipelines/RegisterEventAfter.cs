@@ -12,9 +12,9 @@ namespace Shuttle.Core.Pipelines
         public RegisterEventAfter(IPipelineStage pipelineStage, List<IPipelineEvent> eventsToExecute,
             IPipelineEvent pipelineEvent)
         {
-            _pipelineStage = pipelineStage;
-            _eventsToExecute = eventsToExecute;
-            _pipelineEvent = pipelineEvent;
+            _pipelineStage = Guard.AgainstNull(pipelineStage, nameof(pipelineStage));
+            _eventsToExecute = Guard.AgainstNull(eventsToExecute, nameof(eventsToExecute));
+            _pipelineEvent = Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent));
         }
 
         public IPipelineStage Register<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()

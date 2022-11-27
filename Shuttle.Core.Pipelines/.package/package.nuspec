@@ -3,7 +3,7 @@
 <package>
 	<metadata>
 		<id>Shuttle.Core.Pipelines</id>
-		<version>12.1.0</version>
+		<version>12.1.1</version>
 		<authors>Eben Roux</authors>
 		<owners>Eben Roux</owners>
 		<license type="expression">BSD-3-Clause</license>
@@ -16,9 +16,9 @@
 		<copyright>Copyright (c) 2022, Eben Roux</copyright>
 		<tags>shuttle</tags>
 		<dependencies>
-      <dependency id="Microsoft.Extensions.DependencyInjection" version="6.0.0" />
-      <dependency id="Shuttle.Core.Contract" version="10.1.0" />
-      <dependency id="Shuttle.Core.Reflection" version="12.0.0" />
+      <dependency id="Microsoft.Extensions.DependencyInjection" version="7.0.0" />
+      <dependency id="Shuttle.Core.Contract" version="10.1.2" />
+      <dependency id="Shuttle.Core.Reflection" version="12.0.1" />
       <dependency id="System.Reflection.Emit.Lightweight" version="4.7.0" />
 		</dependencies>
 	</metadata>

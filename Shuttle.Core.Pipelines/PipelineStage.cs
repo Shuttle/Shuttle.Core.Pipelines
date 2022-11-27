@@ -11,7 +11,7 @@ namespace Shuttle.Core.Pipelines
 
         public PipelineStage(string name)
         {
-            Name = name;
+            Name = Guard.AgainstNull(name, nameof(name));
             Events = new ReadOnlyCollection<IPipelineEvent>(PipelineEvents);
         }
 
@@ -26,9 +26,7 @@ namespace Shuttle.Core.Pipelines
 
         public IPipelineStage WithEvent(IPipelineEvent pipelineEvent)
         {
-            Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent));
-
-            PipelineEvents.Add(pipelineEvent);
+            PipelineEvents.Add(Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent)));
 
             return this;
         }
