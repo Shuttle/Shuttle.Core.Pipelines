@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading.Tasks;
 using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines
@@ -86,7 +87,7 @@ namespace Shuttle.Core.Pipelines
             ExceptionHandled = true;
         }
 
-        public virtual bool Execute()
+        public virtual async Task<bool> Execute()
         {
             var result = true;
 
@@ -103,13 +104,13 @@ namespace Shuttle.Core.Pipelines
                     {
                         Event = @event;
 
-                        RaiseEvent(@event.Reset(this));
+                        await RaiseEvent(@event.Reset(this)).ConfigureAwait(false);
 
                         if (Aborted)
                         {
                             result = false;
 
-                            RaiseEvent(_onAbortPipeline);
+                            await RaiseEvent(_onAbortPipeline).ConfigureAwait(false);
 
                             break;
                         }
@@ -122,7 +123,7 @@ namespace Shuttle.Core.Pipelines
 
                         ExceptionHandled = false;
                         
-                        RaiseEvent(_onPipelineException, true);
+                        await RaiseEvent(_onPipelineException, true).ConfigureAwait(false);
 
                         if (!ExceptionHandled)
                         {
@@ -134,7 +135,7 @@ namespace Shuttle.Core.Pipelines
                             continue;
                         }
 
-                        RaiseEvent(_onAbortPipeline);
+                        await RaiseEvent(_onAbortPipeline).ConfigureAwait(false);
 
                         break;
                     }
@@ -172,7 +173,7 @@ namespace Shuttle.Core.Pipelines
             return result;
         }
 
-        private void RaiseEvent(IPipelineEvent @event, bool ignoreAbort = false)
+        private async Task RaiseEvent(IPipelineEvent @event, bool ignoreAbort = false)
         {
             ObservedEvents.TryGetValue(@event.GetType(), out var observersForEvent);
 
@@ -185,7 +186,7 @@ namespace Shuttle.Core.Pipelines
             {
                 try
                 {
-                    observer.Invoke(@event);
+                    await observer.Invoke(@event).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -205,7 +206,7 @@ namespace Shuttle.Core.Pipelines
 
             private readonly InvokeHandler _invoker;
 
-            private delegate void InvokeHandler(IPipelineObserver pipelineObserver, IPipelineEvent @event);
+            private delegate Task InvokeHandler(IPipelineObserver pipelineObserver, IPipelineEvent @event);
 
             public ObserverMethodInvoker(IPipelineObserver pipelineObserver, Type pipelineEventType)
             {
@@ -213,8 +214,12 @@ namespace Shuttle.Core.Pipelines
                 
                 var pipelineObserverType = pipelineObserver.GetType();
 
-                var dynamicMethod = new DynamicMethod(string.Empty, 
-                    typeof(void), new[] { typeof(IPipelineObserver), typeof(IPipelineEvent) }, 
+                var dynamicMethod = new DynamicMethod(string.Empty, typeof(Task), 
+                    new[]
+                    {
+                        typeof(IPipelineObserver), 
+                        typeof(IPipelineEvent)
+                    }, 
                     typeof(IPipelineEvent).Module);
         
                 var il = dynamicMethod.GetILGenerator();
@@ -228,9 +233,9 @@ namespace Shuttle.Core.Pipelines
                 _invoker = (InvokeHandler)dynamicMethod.CreateDelegate(typeof(InvokeHandler));
             }
 
-            public void Invoke(IPipelineEvent @event)
+            public async Task Invoke(IPipelineEvent @event)
             {
-                _invoker.Invoke(_pipelineObserver, @event);
+                await _invoker.Invoke(_pipelineObserver, @event).ConfigureAwait(false);
             }
 
             public string GetObserverTypeName() => _pipelineObserver.GetType().FullName;

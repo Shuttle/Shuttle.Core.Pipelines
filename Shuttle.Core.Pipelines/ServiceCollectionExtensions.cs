@@ -23,7 +23,7 @@ namespace Shuttle.Core.Pipelines
 
             services.TryAddSingleton<IPipelineFactory, PipelineFactory>();
 
-            services.AddSingleton<IPipelineModuleProvider>(serviceProvider => new PipelineModuleProvider(ModuleTypes));
+            services.AddSingleton<IPipelineFeatureProvider>(serviceProvider => new PipelineFeatureProvider(ModuleTypes));
 
             return services;
         }

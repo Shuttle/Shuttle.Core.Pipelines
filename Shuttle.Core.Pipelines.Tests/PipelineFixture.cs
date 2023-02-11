@@ -1,5 +1,5 @@
 using System;
-using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Shuttle.Core.Pipelines.Tests
@@ -8,7 +8,7 @@ namespace Shuttle.Core.Pipelines.Tests
     public class PipelineFixture
     {
         [Test]
-        public void Should_be_able_to_execute_a_valid_pipeline()
+        public async Task Should_be_able_to_execute_a_valid_pipeline()
         {
             var pipeline = GetPipeline();
 
@@ -22,7 +22,7 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            pipeline.Execute();
+            await pipeline.Execute();
 
             Assert.AreEqual("123", observer.CallSequence);
         }
@@ -33,7 +33,7 @@ namespace Shuttle.Core.Pipelines.Tests
         }
 
         [Test]
-        public void Should_be_able_to_register_events_after_existing_event()
+        public async Task Should_be_able_to_register_events_after_existing_event()
         {
             var pipeline = GetPipeline();
 
@@ -46,13 +46,13 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            pipeline.Execute();
+            await pipeline.Execute();
 
             Assert.AreEqual("321", observer.CallSequence);
         }
 
         [Test]
-        public void Should_be_able_to_register_events_before_existing_event()
+        public async Task Should_be_able_to_register_events_before_existing_event()
         {
             var pipeline = GetPipeline();
 
@@ -66,7 +66,7 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            pipeline.Execute();
+            await pipeline.Execute();
 
             Assert.AreEqual("321", observer.CallSequence);
         }
@@ -100,7 +100,7 @@ namespace Shuttle.Core.Pipelines.Tests
         }
 
         [Test]
-        public void Should_be_able_to_call_an_interfaced_observer()
+        public async Task Should_be_able_to_call_an_interfaced_observer()
         {
             var pipeline = GetPipeline();
 
@@ -111,7 +111,7 @@ namespace Shuttle.Core.Pipelines.Tests
             
             pipeline.RegisterObserver(interfacedObserver);
 
-            pipeline.Execute();
+            await pipeline.Execute();
 
             Assert.IsTrue(interfacedObserver.Called);
         }

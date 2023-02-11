@@ -4,13 +4,13 @@ using System.Linq;
 
 namespace Shuttle.Core.Pipelines
 {
-    public class PipelineModuleProvider : IPipelineModuleProvider
+    public class PipelineFeatureProvider : IPipelineFeatureProvider
     {
-        public IEnumerable<Type> ModuleTypes { get; }
+        public IEnumerable<Type> FeatureTypes { get; }
 
-        public PipelineModuleProvider(IEnumerable<Type> moduleTypes)
+        public PipelineFeatureProvider(IEnumerable<Type> moduleTypes)
         {
-            ModuleTypes = moduleTypes ?? Enumerable.Empty<Type>();
+            FeatureTypes = moduleTypes ?? Enumerable.Empty<Type>();
         }
     }
 }

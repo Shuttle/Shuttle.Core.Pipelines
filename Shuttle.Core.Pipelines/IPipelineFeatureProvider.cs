@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Shuttle.Core.Pipelines
 {
-    public interface IPipelineModuleProvider
+    public interface IPipelineFeatureProvider
     {
-        IEnumerable<Type> ModuleTypes { get; }
+        IEnumerable<Type> FeatureTypes { get; }
     }
 }

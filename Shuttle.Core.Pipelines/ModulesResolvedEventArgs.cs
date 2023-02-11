@@ -4,13 +4,13 @@ using System.Linq;
 
 namespace Shuttle.Core.Pipelines
 {
-    public class ModulesResolvedEventArgs : EventArgs
+    public class FeaturesResolvedEventArgs : EventArgs
     {
-        public IEnumerable<Type> ModuleTypes { get; }
+        public IEnumerable<Type> FeatureTypes { get; }
 
-        public ModulesResolvedEventArgs(IEnumerable<Type> moduleTypes)
+        public FeaturesResolvedEventArgs(IEnumerable<Type> featureTypes)
         {
-            ModuleTypes = moduleTypes ?? Enumerable.Empty<Type>();
+            FeatureTypes = featureTypes ?? Enumerable.Empty<Type>();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace Shuttle.Core.Pipelines
 {
@@ -13,7 +14,7 @@ namespace Shuttle.Core.Pipelines
         IState State { get; }
         void Abort();
         void MarkExceptionHandled();
-        bool Execute();
+        Task<bool> Execute();
         IPipelineStage RegisterStage(string name);
         IPipelineStage GetStage(string name);
         IPipeline RegisterObserver(IPipelineObserver pipelineObserver);

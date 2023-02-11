@@ -8,14 +8,14 @@ namespace Shuttle.Core.Pipelines
     {
         private ReusableObjectPool<object> _pool;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IPipelineModuleProvider _pipelineModuleProvider;
+        private readonly IPipelineFeatureProvider _pipelineFeatureProvider;
         private static readonly object Lock = new object();
         private static volatile bool _modulesResolved = false;
 
-        public PipelineFactory(IServiceProvider serviceProvider, IPipelineModuleProvider pipelineModuleProvider)
+        public PipelineFactory(IServiceProvider serviceProvider, IPipelineFeatureProvider pipelineFeatureProvider)
         {
             _serviceProvider = Guard.AgainstNull(serviceProvider, nameof(serviceProvider));
-            _pipelineModuleProvider = Guard.AgainstNull(pipelineModuleProvider, nameof(pipelineModuleProvider));
+            _pipelineFeatureProvider = Guard.AgainstNull(pipelineFeatureProvider, nameof(pipelineFeatureProvider));
             _pool = new ReusableObjectPool<object>();
         }
 
@@ -31,7 +31,7 @@ namespace Shuttle.Core.Pipelines
         {
         };
 
-        public event EventHandler<ModulesResolvedEventArgs> ModulesResolved = delegate
+        public event EventHandler<FeaturesResolvedEventArgs> ModulesResolved = delegate
         {
         };
 
@@ -41,14 +41,14 @@ namespace Shuttle.Core.Pipelines
             {
                 if (!_modulesResolved)
                 {
-                    foreach (var moduleType in _pipelineModuleProvider.ModuleTypes)
+                    foreach (var moduleType in _pipelineFeatureProvider.FeatureTypes)
                     {
                         _serviceProvider.GetRequiredService(moduleType);
                     }
 
                     _modulesResolved = true;
 
-                    ModulesResolved.Invoke(this, new ModulesResolvedEventArgs(_pipelineModuleProvider.ModuleTypes));
+                    ModulesResolved.Invoke(this, new FeaturesResolvedEventArgs(_pipelineFeatureProvider.FeatureTypes));
                 }
             }
 
