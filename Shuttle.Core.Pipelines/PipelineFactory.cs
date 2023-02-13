@@ -10,7 +10,7 @@ namespace Shuttle.Core.Pipelines
         private readonly IServiceProvider _serviceProvider;
         private readonly IPipelineFeatureProvider _pipelineFeatureProvider;
         private static readonly object Lock = new object();
-        private static volatile bool _modulesResolved = false;
+        private static volatile bool _featuresResolved = false;
 
         public PipelineFactory(IServiceProvider serviceProvider, IPipelineFeatureProvider pipelineFeatureProvider)
         {
@@ -31,7 +31,7 @@ namespace Shuttle.Core.Pipelines
         {
         };
 
-        public event EventHandler<FeaturesResolvedEventArgs> ModulesResolved = delegate
+        public event EventHandler<FeaturesResolvedEventArgs> FeaturesResolved = delegate
         {
         };
 
@@ -39,16 +39,16 @@ namespace Shuttle.Core.Pipelines
         {
             lock (Lock)
             {
-                if (!_modulesResolved)
+                if (!_featuresResolved)
                 {
                     foreach (var moduleType in _pipelineFeatureProvider.FeatureTypes)
                     {
                         _serviceProvider.GetRequiredService(moduleType);
                     }
 
-                    _modulesResolved = true;
+                    _featuresResolved = true;
 
-                    ModulesResolved.Invoke(this, new FeaturesResolvedEventArgs(_pipelineFeatureProvider.FeatureTypes));
+                    FeaturesResolved.Invoke(this, new FeaturesResolvedEventArgs(_pipelineFeatureProvider.FeatureTypes));
                 }
             }
 

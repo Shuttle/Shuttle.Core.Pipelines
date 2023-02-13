@@ -10,7 +10,7 @@ namespace Shuttle.Core.Pipelines
 {
     public static class ServiceCollectionExtensions
     {
-        private static readonly List<Type> ModuleTypes = new List<Type>();
+        private static readonly List<Type> FeatureTypes = new List<Type>();
 
         public static IServiceCollection AddPipelineProcessing(this IServiceCollection services,
             Action<PipelineProcessingBuilder> builder = null)
@@ -23,24 +23,24 @@ namespace Shuttle.Core.Pipelines
 
             services.TryAddSingleton<IPipelineFactory, PipelineFactory>();
 
-            services.AddSingleton<IPipelineFeatureProvider>(serviceProvider => new PipelineFeatureProvider(ModuleTypes));
+            services.AddSingleton<IPipelineFeatureProvider>(serviceProvider => new PipelineFeatureProvider(FeatureTypes));
 
             return services;
         }
 
-        public static IServiceCollection AddPipelineModule<T>(this IServiceCollection services) where T : class
+        public static IServiceCollection AddPipelineFeature<T>(this IServiceCollection services) where T : class
         {
-            return AddPipelineModule(services, typeof(T));
+            return AddPipelineFeature(services, typeof(T));
         }
 
-        public static IServiceCollection AddPipelineModule(this IServiceCollection services, Type type)
+        public static IServiceCollection AddPipelineFeature(this IServiceCollection services, Type type)
         {
             Guard.AgainstNull(services, nameof(services));
             Guard.AgainstNull(type, nameof(type));
 
-            if (!ModuleTypes.Contains(type))
+            if (!FeatureTypes.Contains(type))
             {
-                ModuleTypes.Add(type);
+                FeatureTypes.Add(type);
             }
 
             services.TryAddSingleton(type, type);
