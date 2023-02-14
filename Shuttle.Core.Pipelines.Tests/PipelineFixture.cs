@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -22,7 +23,7 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            await pipeline.Execute();
+            await pipeline.Execute(CancellationToken.None);
 
             Assert.AreEqual("123", observer.CallSequence);
         }
@@ -46,7 +47,7 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            await pipeline.Execute();
+            await pipeline.Execute(CancellationToken.None);
 
             Assert.AreEqual("321", observer.CallSequence);
         }
@@ -66,7 +67,7 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            await pipeline.Execute();
+            await pipeline.Execute(CancellationToken.None);
 
             Assert.AreEqual("321", observer.CallSequence);
         }
@@ -111,7 +112,7 @@ namespace Shuttle.Core.Pipelines.Tests
             
             pipeline.RegisterObserver(interfacedObserver);
 
-            await pipeline.Execute();
+            await pipeline.Execute(CancellationToken.None);
 
             Assert.IsTrue(interfacedObserver.Called);
         }

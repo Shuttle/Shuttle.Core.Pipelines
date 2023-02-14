@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using System.Threading.Tasks;
 using Shuttle.Core.Contract;
 
@@ -12,6 +13,7 @@ namespace Shuttle.Core.Pipelines
     {
         private readonly OnAbortPipeline _onAbortPipeline = new OnAbortPipeline();
         private readonly OnPipelineException _onPipelineException = new OnPipelineException();
+        private readonly OnExecutionCancelled _onExecutionCancelled = new OnExecutionCancelled();
 
         private readonly OnPipelineStarting _onPipelineStarting = new OnPipelineStarting();
         private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
@@ -31,6 +33,7 @@ namespace Shuttle.Core.Pipelines
 
             _onAbortPipeline.Reset(this);
             _onPipelineException.Reset(this);
+            _onExecutionCancelled.Reset(this);
 
             var stage = new PipelineStage("__PipelineEntry");
 
@@ -40,6 +43,7 @@ namespace Shuttle.Core.Pipelines
         }
 
         public Guid Id { get; }
+        public CancellationToken CancellationToken { get; private set; }
         public bool ExceptionHandled { get; internal set; }
         public Exception Exception { get; internal set; }
         public bool Aborted { get; internal set; }
@@ -87,12 +91,12 @@ namespace Shuttle.Core.Pipelines
             ExceptionHandled = true;
         }
 
-        public virtual async Task<bool> Execute()
+        public virtual async Task<bool> Execute(CancellationToken cancellationToken)
         {
-            var result = true;
-
             Aborted = false;
             Exception = null;
+
+            CancellationToken = cancellationToken;
 
             foreach (var stage in Stages)
             {
@@ -102,23 +106,28 @@ namespace Shuttle.Core.Pipelines
                 {
                     try
                     {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            await RaiseE7vent(_onExecutionCancelled).ConfigureAwait(false);
+
+                            return false;
+                        }
+
                         Event = @event;
 
                         await RaiseEvent(@event.Reset(this)).ConfigureAwait(false);
 
-                        if (Aborted)
+                        if (!Aborted)
                         {
-                            result = false;
-
-                            await RaiseEvent(_onAbortPipeline).ConfigureAwait(false);
-
-                            break;
+                            continue;
                         }
+
+                        await RaiseEvent(_onAbortPipeline).ConfigureAwait(false);
+
+                        return false;
                     }
                     catch (Exception ex)
                     {
-                        result = false;
-
                         Exception = ex.TrimLeading<TargetInvocationException>();
 
                         ExceptionHandled = false;
@@ -137,17 +146,12 @@ namespace Shuttle.Core.Pipelines
 
                         await RaiseEvent(_onAbortPipeline).ConfigureAwait(false);
 
-                        break;
+                        return false;
                     }
-                }
-
-                if (Aborted)
-                {
-                    break;
                 }
             }
 
-            return result;
+            return true;
         }
 
         public IPipelineStage RegisterStage(string name)
