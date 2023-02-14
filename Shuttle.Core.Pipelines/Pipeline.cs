@@ -108,7 +108,7 @@ namespace Shuttle.Core.Pipelines
                     {
                         if (cancellationToken.IsCancellationRequested)
                         {
-                            await RaiseE7vent(_onExecutionCancelled).ConfigureAwait(false);
+                            await RaiseEvent(_onExecutionCancelled).ConfigureAwait(false);
 
                             return false;
                         }
