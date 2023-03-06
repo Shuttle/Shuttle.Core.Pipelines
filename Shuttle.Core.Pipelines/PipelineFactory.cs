@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines
@@ -8,14 +9,12 @@ namespace Shuttle.Core.Pipelines
     {
         private ReusableObjectPool<object> _pool;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IPipelineFeatureProvider _pipelineFeatureProvider;
         private static readonly object Lock = new object();
         private static volatile bool _featuresResolved = false;
 
-        public PipelineFactory(IServiceProvider serviceProvider, IPipelineFeatureProvider pipelineFeatureProvider)
+        public PipelineFactory(IServiceProvider serviceProvider)
         {
             _serviceProvider = Guard.AgainstNull(serviceProvider, nameof(serviceProvider));
-            _pipelineFeatureProvider = Guard.AgainstNull(pipelineFeatureProvider, nameof(pipelineFeatureProvider));
             _pool = new ReusableObjectPool<object>();
         }
 
@@ -41,14 +40,9 @@ namespace Shuttle.Core.Pipelines
             {
                 if (!_featuresResolved)
                 {
-                    foreach (var moduleType in _pipelineFeatureProvider.FeatureTypes)
-                    {
-                        _serviceProvider.GetRequiredService(moduleType);
-                    }
+                    FeaturesResolved.Invoke(this, new FeaturesResolvedEventArgs(_serviceProvider.GetServices<IPipelineFeature>()));
 
                     _featuresResolved = true;
-
-                    FeaturesResolved.Invoke(this, new FeaturesResolvedEventArgs(_pipelineFeatureProvider.FeatureTypes));
                 }
             }
 

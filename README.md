@@ -18,21 +18,21 @@ services.AddPipelineProcessing(builder => {
 
 This will register the `IPipelineFactory` and, using the builder, add all `IPipeline` and `IPipelineObserver` implementations as `Transient`.  The pipeline instances are re-used as they are kept in a pool.
 
-Since pipelines are quite frequently extended by adding observers a *module* may be added that adds the relevant observers to a pipeline on creation:
+Since pipelines are quite frequently extended by adding observers, a *feature* may be added that adds the relevant observers to a pipeline on creation where the relevant type implements the `IPipelineFeature` interface:
 
 ```c#
-services.AddPipelineModule<T>();
-services.AddPipelineModule(type);
+services.AddPipelineFeature<T>();
+services.AddPipelineFeature(type);
 ```
 
-The way this is accomplished is having a module such as the following:
+The way this is accomplished is having a feature such as the following:
 
 ```c#
-public class SomeModule
+public class SomeFeature : IPipelineFeature
 {
     private readonly Type _pipelineType = typeof(InterestingPipeline);
 
-    public SomeModule(IPipelineFactory pipelineFactory)
+    public SomeFeature(IPipelineFactory pipelineFactory)
     {
         Guard.AgainstNull(pipelineFactory, nameof(pipelineFactory));
 
@@ -53,10 +53,10 @@ public class SomeModule
 }
 ```
 
-The above module could be added to the `IServiceCollection` as follows:
+The above feature could be added to the `IServiceCollection` as follows:
 
 ```c#
-services.AddPipelineModule<SomeModule>();
+services.AddPipelineFeature<SomeFeature>();
 ```
 
 ## Overview

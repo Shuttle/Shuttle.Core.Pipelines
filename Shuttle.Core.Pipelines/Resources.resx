@@ -119,30 +119,34 @@
   </resheader>
   <data name="DuplicatePipelineInstanceException" xml:space="preserve">
     <value>The IComponentResolver implementation returned the same pipeline instance of type '{0}'.  Since pipelines are not stateless that cannot be shared.  Please register the pipeline types as transient.</value>
-    <comment>{0} = pipeline type</comment>
+    <comment>0 = pipeline type</comment>
   </data>
   <data name="NullPipelineException" xml:space="preserve">
     <value>The IComponentResolver implementation returned null for pipeline of type '{0}'.</value>
-    <comment>{0} = full type name of pipeline requested</comment>
+    <comment>0 = full type name of pipeline requested</comment>
   </data>
   <data name="ObserverInterfaceMissingException" xml:space="preserve">
     <value>Observer with type name '{0}' does not have an interface with name 'I{0}'.</value>
     <comment>0 = observer type name</comment>
   </data>
+  <data name="PipelineFeatureTypeException" xml:space="preserve">
+    <value>Type '{0}' does not implement 'IPipelineFeature' and can, therefore, not be registered as a pipeline feature.</value>
+    <comment>0 = type that is being registered as a pipeline feature</comment>
+  </data>
   <data name="PipelineStageEventNotRegistered" xml:space="preserve">
     <value>Pipeline stage '{0}' has no event of type '{1}'.</value>
-    <comment>{0} = pipeline stage name, {1} = unknown event type name</comment>
+    <comment>0 = pipeline stage name, 1 = unknown event type name</comment>
   </data>
   <data name="PipelineStageNotFound" xml:space="preserve">
     <value>There is no pipeline stage with a name of '{0}'.</value>
-    <comment>{0} = unknown stage name</comment>
+    <comment>0 = unknown stage name</comment>
   </data>
   <data name="UnhandledPipelineException" xml:space="preserve">
     <value>Unhandled exception during event '{0}': {1}</value>
-    <comment>{0} = event name, {1} = exception message</comment>
+    <comment>0 = event name, 1 = exception message</comment>
   </data>
   <data name="VerboseRaisingPipelineEvent" xml:space="preserve">
     <value>Raising pipeline event '{0}' in stage '{1}' for observer '{2}'.</value>
-    <comment>{0} = pipeline event name, {1} = pipeline stage name, {2} = observer name</comment>
+    <comment>0 = pipeline event name, 1 = pipeline stage name, 2 = observer name</comment>
   </data>
 </root>

@@ -6,11 +6,11 @@ namespace Shuttle.Core.Pipelines
 {
     public class FeaturesResolvedEventArgs : EventArgs
     {
-        public IEnumerable<Type> FeatureTypes { get; }
+        public IEnumerable<IPipelineFeature> Features { get; }
 
-        public FeaturesResolvedEventArgs(IEnumerable<Type> featureTypes)
+        public FeaturesResolvedEventArgs(IEnumerable<IPipelineFeature> features)
         {
-            FeatureTypes = featureTypes ?? Enumerable.Empty<Type>();
+            Features = features ?? Enumerable.Empty<IPipelineFeature>();
         }
     }
 }

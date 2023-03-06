@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shuttle.Core.Contract;
@@ -10,7 +10,7 @@ namespace Shuttle.Core.Pipelines
 {
     public static class ServiceCollectionExtensions
     {
-        private static readonly List<Type> FeatureTypes = new List<Type>();
+        private static readonly Type _pipelineFeatureType = typeof(IPipelineFeature);
 
         public static IServiceCollection AddPipelineProcessing(this IServiceCollection services,
             Action<PipelineProcessingBuilder> builder = null)
@@ -23,14 +23,12 @@ namespace Shuttle.Core.Pipelines
 
             services.TryAddSingleton<IPipelineFactory, PipelineFactory>();
 
-            services.AddSingleton<IPipelineFeatureProvider>(serviceProvider => new PipelineFeatureProvider(FeatureTypes));
-
             return services;
         }
 
-        public static IServiceCollection AddPipelineFeature<T>(this IServiceCollection services) where T : class
+        public static IServiceCollection AddPipelineFeature<T>(this IServiceCollection services) where T : IPipelineFeature
         {
-            return AddPipelineFeature(services, typeof(T));
+            return services.AddPipelineFeature(typeof(T));
         }
 
         public static IServiceCollection AddPipelineFeature(this IServiceCollection services, Type type)
@@ -38,12 +36,12 @@ namespace Shuttle.Core.Pipelines
             Guard.AgainstNull(services, nameof(services));
             Guard.AgainstNull(type, nameof(type));
 
-            if (!FeatureTypes.Contains(type))
+            if (!type.IsAssignableTo(_pipelineFeatureType))
             {
-                FeatureTypes.Add(type);
+                throw new ArgumentException(string.Format(Resources.PipelineFeatureTypeException, type.Name));
             }
 
-            services.TryAddSingleton(type, type);
+            services.AddSingleton(_pipelineFeatureType, type);
 
             return services;
         }
