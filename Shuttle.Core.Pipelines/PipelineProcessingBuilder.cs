@@ -41,12 +41,12 @@ namespace Shuttle.Core.Pipelines
 
                 if (interfaceType != null)
                 {
-                    if (Services.Contains(ServiceDescriptor.Transient(interfaceType, type)))
+                    if (Services.Contains(ServiceDescriptor.Singleton(interfaceType, type)))
                     {
                         continue;
                     }
 
-                    Services.AddTransient(interfaceType, type);
+                    Services.AddSingleton(interfaceType, type);
                 }
                 else
                 {

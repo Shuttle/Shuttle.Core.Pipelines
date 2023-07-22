@@ -10,7 +10,7 @@ namespace Shuttle.Core.Pipelines
         private ReusableObjectPool<object> _pool;
         private readonly IServiceProvider _serviceProvider;
         private static readonly object Lock = new object();
-        private static volatile bool _featuresResolved = false;
+        private bool _featuresResolved;
 
         public PipelineFactory(IServiceProvider serviceProvider)
         {

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Shuttle.Core.Contract;
@@ -10,21 +8,7 @@ namespace Shuttle.Core.Pipelines
 {
     public static class ServiceCollectionExtensions
     {
-        private static readonly Type _pipelineFeatureType = typeof(IPipelineFeature);
-
-        public static IServiceCollection AddPipelineProcessing(this IServiceCollection services,
-            Action<PipelineProcessingBuilder> builder = null)
-        {
-            Guard.AgainstNull(services, nameof(services));
-
-            var pipelineProcessingBuilder = new PipelineProcessingBuilder(services);
-
-            builder?.Invoke(pipelineProcessingBuilder);
-
-            services.TryAddSingleton<IPipelineFactory, PipelineFactory>();
-
-            return services;
-        }
+        private static readonly Type PipelineFeatureType = typeof(IPipelineFeature);
 
         public static IServiceCollection AddPipelineFeature<T>(this IServiceCollection services) where T : IPipelineFeature
         {
@@ -36,12 +20,26 @@ namespace Shuttle.Core.Pipelines
             Guard.AgainstNull(services, nameof(services));
             Guard.AgainstNull(type, nameof(type));
 
-            if (!type.IsAssignableTo(_pipelineFeatureType))
+            if (!type.IsAssignableTo(PipelineFeatureType))
             {
                 throw new ArgumentException(string.Format(Resources.PipelineFeatureTypeException, type.Name));
             }
 
-            services.AddSingleton(_pipelineFeatureType, type);
+            services.AddSingleton(PipelineFeatureType, type);
+
+            return services;
+        }
+
+        public static IServiceCollection AddPipelineProcessing(this IServiceCollection services,
+            Action<PipelineProcessingBuilder> builder = null)
+        {
+            Guard.AgainstNull(services, nameof(services));
+
+            var pipelineProcessingBuilder = new PipelineProcessingBuilder(services);
+
+            builder?.Invoke(pipelineProcessingBuilder);
+
+            services.TryAddSingleton<IPipelineFactory, PipelineFactory>();
 
             return services;
         }
