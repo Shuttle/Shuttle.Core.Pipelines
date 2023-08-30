@@ -20,7 +20,7 @@ namespace Shuttle.Core.Pipelines
 
             var reflectionService = new ReflectionService();
 
-            foreach (var type in reflectionService.GetTypesAssignableTo<IPipeline>(assembly).GetAwaiter().GetResult())
+            foreach (var type in reflectionService.GetTypesAssignableTo<IPipeline>(assembly))
             {
                 if (type.IsInterface || type.IsAbstract || Services.Contains(ServiceDescriptor.Transient(type, type)))
                 {
@@ -30,7 +30,7 @@ namespace Shuttle.Core.Pipelines
                 Services.AddTransient(type, type);
             }
 
-            foreach (var type in reflectionService.GetTypesAssignableTo<IPipelineObserver>(assembly).GetAwaiter().GetResult())
+            foreach (var type in reflectionService.GetTypesAssignableTo<IPipelineObserver>(assembly))
             {
                 if (type.IsInterface || type.IsAbstract)
                 {

@@ -8,6 +8,7 @@ namespace Shuttle.Core.Pipelines
 
     public interface IPipelineObserver<in TPipelineEvent> : IPipelineObserver where TPipelineEvent : IPipelineEvent
     {
-        Task Execute(TPipelineEvent pipelineEvent);
+        void Execute(TPipelineEvent pipelineEvent);
+        Task ExecuteAsync(TPipelineEvent pipelineEvent);
     }
 }

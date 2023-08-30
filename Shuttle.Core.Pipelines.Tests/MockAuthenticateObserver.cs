@@ -10,29 +10,45 @@ namespace Shuttle.Core.Pipelines.Tests
     {
         public string CallSequence { get; private set; } = string.Empty;
 
-        public async Task Execute(MockPipelineEvent1 pipelineEvent)
+        private void Execute(PipelineEvent pipelineEvent, int delta)
         {
             Console.WriteLine(@"[collection] : {0}", pipelineEvent.Name);
 
-            CallSequence += "1";
+            CallSequence += delta.ToString();
+        }
+
+        public void Execute(MockPipelineEvent1 pipelineEvent)
+        {
+            Execute(pipelineEvent, 1);
+        }
+
+        public async Task ExecuteAsync(MockPipelineEvent1 pipelineEvent)
+        {
+            Execute(pipelineEvent, 1);
             
             await Task.CompletedTask;
         }
 
-        public async Task Execute(MockPipelineEvent2 pipelineEvent)
+        public void Execute(MockPipelineEvent2 pipelineEvent)
         {
-            Console.WriteLine(@"[collection] : {0}", pipelineEvent.Name);
+            Execute(pipelineEvent, 2);
+        }
 
-            CallSequence += "2";
+        public async Task ExecuteAsync(MockPipelineEvent2 pipelineEvent)
+        {
+            Execute(pipelineEvent, 2);
 
             await Task.CompletedTask;
         }
 
-        public async Task Execute(MockPipelineEvent3 pipelineEvent)
+        public void Execute(MockPipelineEvent3 pipelineEvent)
         {
-            Console.WriteLine(@"[collection] : {0}", pipelineEvent.Name);
+            Execute(pipelineEvent, 3);
+        }
 
-            CallSequence += "3";
+        public async Task ExecuteAsync(MockPipelineEvent3 pipelineEvent)
+        {
+            Execute(pipelineEvent, 3);
 
             await Task.CompletedTask;
         }

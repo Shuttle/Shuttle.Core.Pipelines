@@ -9,7 +9,7 @@ namespace Shuttle.Core.Pipelines.Tests
     public class PipelineFixture
     {
         [Test]
-        public async Task Should_be_able_to_execute_a_valid_pipeline()
+        public void Should_be_able_to_execute_a_valid_pipeline()
         {
             var pipeline = GetPipeline();
 
@@ -23,7 +23,27 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            await pipeline.Execute(CancellationToken.None);
+            pipeline.Execute();
+
+            Assert.AreEqual("123", observer.CallSequence);
+        }
+
+        [Test]
+        public async Task Should_be_able_to_execute_a_valid_pipeline_async()
+        {
+            var pipeline = GetPipeline();
+
+            pipeline
+                .RegisterStage("Stage")
+                .WithEvent<MockPipelineEvent1>()
+                .WithEvent<MockPipelineEvent2>()
+                .WithEvent<MockPipelineEvent3>();
+
+            var observer = new MockAuthenticateObserver();
+
+            pipeline.RegisterObserver(observer);
+
+            await pipeline.ExecuteAsync(CancellationToken.None);
 
             Assert.AreEqual("123", observer.CallSequence);
         }
@@ -34,7 +54,7 @@ namespace Shuttle.Core.Pipelines.Tests
         }
 
         [Test]
-        public async Task Should_be_able_to_register_events_after_existing_event()
+        public void Should_be_able_to_register_events_after_existing_event()
         {
             var pipeline = GetPipeline();
 
@@ -47,13 +67,32 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            await pipeline.Execute(CancellationToken.None);
+            pipeline.Execute();
 
             Assert.AreEqual("321", observer.CallSequence);
         }
 
         [Test]
-        public async Task Should_be_able_to_register_events_before_existing_event()
+        public async Task Should_be_able_to_register_events_after_existing_event_async()
+        {
+            var pipeline = GetPipeline();
+
+            pipeline.RegisterStage("Stage")
+                .WithEvent<MockPipelineEvent3>()
+                .AfterEvent<MockPipelineEvent3>().Register<MockPipelineEvent2>()
+                .AfterEvent<MockPipelineEvent2>().Register(new MockPipelineEvent1());
+
+            var observer = new MockAuthenticateObserver();
+
+            pipeline.RegisterObserver(observer);
+
+            await pipeline.ExecuteAsync(CancellationToken.None);
+
+            Assert.AreEqual("321", observer.CallSequence);
+        }
+
+        [Test]
+        public void Should_be_able_to_register_events_before_existing_event()
         {
             var pipeline = GetPipeline();
 
@@ -67,7 +106,27 @@ namespace Shuttle.Core.Pipelines.Tests
 
             pipeline.RegisterObserver(observer);
 
-            await pipeline.Execute(CancellationToken.None);
+             pipeline.Execute(CancellationToken.None);
+
+            Assert.AreEqual("321", observer.CallSequence);
+        }
+
+        [Test]
+        public async Task Should_be_able_to_register_events_before_existing_event_async()
+        {
+            var pipeline = GetPipeline();
+
+            pipeline.RegisterStage("Stage")
+                .WithEvent<MockPipelineEvent1>();
+
+            pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent1>().Register<MockPipelineEvent2>();
+            pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent2>().Register(new MockPipelineEvent3());
+
+            var observer = new MockAuthenticateObserver();
+
+            pipeline.RegisterObserver(observer);
+
+            await pipeline.ExecuteAsync(CancellationToken.None);
 
             Assert.AreEqual("321", observer.CallSequence);
         }
@@ -101,7 +160,7 @@ namespace Shuttle.Core.Pipelines.Tests
         }
 
         [Test]
-        public async Task Should_be_able_to_call_an_interfaced_observer()
+        public void Should_be_able_to_call_an_interfaced_observer()
         {
             var pipeline = GetPipeline();
 
@@ -112,7 +171,24 @@ namespace Shuttle.Core.Pipelines.Tests
             
             pipeline.RegisterObserver(interfacedObserver);
 
-            await pipeline.Execute(CancellationToken.None);
+            pipeline.Execute();
+
+            Assert.IsTrue(interfacedObserver.Called);
+        }
+
+        [Test]
+        public async Task Should_be_able_to_call_an_interfaced_observer_async()
+        {
+            var pipeline = GetPipeline();
+
+            pipeline.RegisterStage("Stage")
+                .WithEvent<MockPipelineEvent1>();
+
+            var interfacedObserver = new InterfacedObserver();
+            
+            pipeline.RegisterObserver(interfacedObserver);
+
+            await pipeline.ExecuteAsync(CancellationToken.None);
 
             Assert.IsTrue(interfacedObserver.Called);
         }

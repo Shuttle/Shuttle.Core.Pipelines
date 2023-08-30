@@ -129,10 +129,6 @@
     <value>Observer with type name '{0}' does not have an interface with name 'I{0}'.</value>
     <comment>0 = observer type name</comment>
   </data>
-  <data name="PipelineFeatureTypeException" xml:space="preserve">
-    <value>Type '{0}' does not implement 'IPipelineFeature' and can, therefore, not be registered as a pipeline feature.</value>
-    <comment>0 = type that is being registered as a pipeline feature</comment>
-  </data>
   <data name="PipelineStageEventNotRegistered" xml:space="preserve">
     <value>Pipeline stage '{0}' has no event of type '{1}'.</value>
     <comment>0 = pipeline stage name, 1 = unknown event type name</comment>

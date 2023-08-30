@@ -1,13 +1,12 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Shuttle.Core.Pipelines
 {
     public interface IPipeline
     {
         Guid Id { get; }
-        CancellationToken CancellationToken { get; }
         bool ExceptionHandled { get; }
         Exception Exception { get; }
         bool Aborted { get; }
@@ -16,9 +15,11 @@ namespace Shuttle.Core.Pipelines
         IState State { get; }
         void Abort();
         void MarkExceptionHandled();
-        Task<bool> Execute(CancellationToken cancellationToken);
         IPipelineStage RegisterStage(string name);
         IPipelineStage GetStage(string name);
+        CancellationToken CancellationToken { get; }
+        bool Execute(CancellationToken cancellationToken = default);
+        Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
         IPipeline RegisterObserver(IPipelineObserver pipelineObserver);
     }
 }

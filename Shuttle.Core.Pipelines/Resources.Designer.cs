@@ -88,15 +88,6 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type &apos;{0}&apos; does not implement &apos;IPipelineFeature&apos; and can, therefore, not be registered as a pipeline feature..
-        /// </summary>
-        public static string PipelineFeatureTypeException {
-            get {
-                return ResourceManager.GetString("PipelineFeatureTypeException", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Pipeline stage &apos;{0}&apos; has no event of type &apos;{1}&apos;..
         /// </summary>
         public static string PipelineStageEventNotRegistered {
