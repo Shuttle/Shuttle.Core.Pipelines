@@ -8,7 +8,6 @@ namespace Shuttle.Core.Pipelines
     {
         private ReusableObjectPool<object> _pool;
         private readonly IServiceProvider _serviceProvider;
-        private static readonly object Lock = new object();
 
         public PipelineFactory(IServiceProvider serviceProvider)
         {
@@ -16,17 +15,11 @@ namespace Shuttle.Core.Pipelines
             _pool = new ReusableObjectPool<object>();
         }
 
-        public event EventHandler<PipelineEventArgs> PipelineCreated = delegate
-        {
-        };
+        public event EventHandler<PipelineEventArgs> PipelineCreated;
 
-        public event EventHandler<PipelineEventArgs> PipelineObtained = delegate
-        {
-        };
+        public event EventHandler<PipelineEventArgs> PipelineObtained;
 
-        public event EventHandler<PipelineEventArgs> PipelineReleased = delegate
-        {
-        };
+        public event EventHandler<PipelineEventArgs> PipelineReleased;
 
         public TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline
         {
@@ -50,11 +43,11 @@ namespace Shuttle.Core.Pipelines
                         string.Format(Resources.DuplicatePipelineInstanceException, type.FullName));
                 }
 
-                PipelineCreated.Invoke(this, new PipelineEventArgs(pipeline));
+                PipelineCreated?.Invoke(this, new PipelineEventArgs(pipeline));
             }
             else
             {
-                PipelineObtained.Invoke(this, new PipelineEventArgs(pipeline));
+                PipelineObtained?.Invoke(this, new PipelineEventArgs(pipeline));
             }
 
             return pipeline;
@@ -66,7 +59,7 @@ namespace Shuttle.Core.Pipelines
 
             _pool.Release(pipeline);
 
-            PipelineReleased.Invoke(this, new PipelineEventArgs(pipeline));
+            PipelineReleased?.Invoke(this, new PipelineEventArgs(pipeline));
         }
 
         public void Flush()
