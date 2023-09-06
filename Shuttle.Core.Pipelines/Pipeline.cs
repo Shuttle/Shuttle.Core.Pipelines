@@ -12,18 +12,18 @@ namespace Shuttle.Core.Pipelines
     public class Pipeline : IPipeline
     {
         private readonly OnAbortPipeline _onAbortPipeline = new OnAbortPipeline();
-        private readonly OnPipelineException _onPipelineException = new OnPipelineException();
         private readonly OnExecutionCancelled _onExecutionCancelled = new OnExecutionCancelled();
+        private readonly OnPipelineException _onPipelineException = new OnPipelineException();
 
         private readonly OnPipelineStarting _onPipelineStarting = new OnPipelineStarting();
+
+        private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
         private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
 
         protected readonly Dictionary<Type, List<ObserverMethodInvoker>> ObservedEvents = new Dictionary<Type, List<ObserverMethodInvoker>>();
 
         protected readonly List<IPipelineObserver> Observers = new List<IPipelineObserver>();
         protected readonly List<IPipelineStage> Stages = new List<IPipelineStage>();
-
-        private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
 
         public Pipeline()
         {
@@ -59,11 +59,11 @@ namespace Shuttle.Core.Pipelines
             var observerInterfaces = pipelineObserver.GetType().GetInterfaces();
 
             var implementedEvents = from i in observerInterfaces
-                                    where
-                                        i.IsGenericType &&
-                                        _pipelineObserverType.GetTypeInfo().IsAssignableFrom(i.GetGenericTypeDefinition()) &&
-                                        i.Name.StartsWith("IPipelineObserver`")
-                                    select i;
+                where
+                    i.IsGenericType &&
+                    _pipelineObserverType.GetTypeInfo().IsAssignableFrom(i.GetGenericTypeDefinition()) &&
+                    i.Name.StartsWith("IPipelineObserver`")
+                select i;
 
             foreach (var @event in implementedEvents)
             {
@@ -76,6 +76,7 @@ namespace Shuttle.Core.Pipelines
 
                 ObservedEvents[pipelineEventType].Add(new ObserverMethodInvoker(pipelineObserver, pipelineEventType));
             }
+
             return this;
         }
 
@@ -91,128 +92,12 @@ namespace Shuttle.Core.Pipelines
 
         public virtual bool Execute(CancellationToken cancellationToken = default)
         {
-            var result = true;
-
-            Aborted = false;
-            Exception = null;
-
-            foreach (var stage in Stages)
-            {
-                StageName = stage.Name;
-
-                foreach (var @event in stage.Events)
-                {
-                    try
-                    {
-                        Event = @event;
-
-                        RaiseEvent(@event.Reset(this));
-
-                        if (Aborted)
-                        {
-                            result = false;
-
-                            RaiseEvent(_onAbortPipeline);
-
-                            break;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        result = false;
-
-                        Exception = ex.TrimLeading<TargetInvocationException>();
-
-                        ExceptionHandled = false;
-
-                        RaiseEvent(_onPipelineException, true);
-
-                        if (!ExceptionHandled)
-                        {
-                            throw;
-                        }
-
-                        if (!Aborted)
-                        {
-                            continue;
-                        }
-
-                        RaiseEvent(_onAbortPipeline);
-
-                        break;
-                    }
-                }
-
-                if (Aborted)
-                {
-                    break;
-                }
-            }
-
-            return result;
+            return ExecuteAsync(cancellationToken, true).GetAwaiter().GetResult();
         }
 
         public virtual async Task<bool> ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            Aborted = false;
-            Exception = null;
-
-            CancellationToken = cancellationToken;
-
-            foreach (var stage in Stages)
-            {
-                StageName = stage.Name;
-
-                foreach (var @event in stage.Events)
-                {
-                    try
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            await RaiseEventAsync(_onExecutionCancelled).ConfigureAwait(false);
-
-                            return false;
-                        }
-
-                        Event = @event;
-
-                        await RaiseEventAsync(@event.Reset(this)).ConfigureAwait(false);
-
-                        if (!Aborted)
-                        {
-                            continue;
-                        }
-
-                        await RaiseEventAsync(_onAbortPipeline).ConfigureAwait(false);
-
-                        return false;
-                    }
-                    catch (Exception ex)
-                    {
-                        Exception = ex.TrimLeading<TargetInvocationException>();
-
-                        ExceptionHandled = false;
-
-                        await RaiseEventAsync(_onPipelineException, true).ConfigureAwait(false);
-
-                        if (!ExceptionHandled)
-                        {
-                            throw;
-                        }
-
-                        if (!Aborted)
-                        {
-                            continue;
-                        }
-
-                        await RaiseEventAsync(_onAbortPipeline).ConfigureAwait(false);
-
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            return await ExecuteAsync(cancellationToken, false).ConfigureAwait(false);
         }
 
         public IPipelineStage RegisterStage(string name)
@@ -238,7 +123,105 @@ namespace Shuttle.Core.Pipelines
             return result;
         }
 
-        private void RaiseEvent(IPipelineEvent @event, bool ignoreAbort = false)
+        private async Task<bool> ExecuteAsync(CancellationToken cancellationToken, bool sync)
+        {
+            Aborted = false;
+            Exception = null;
+
+            CancellationToken = cancellationToken;
+
+            foreach (var stage in Stages)
+            {
+                StageName = stage.Name;
+
+                foreach (var @event in stage.Events)
+                {
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            if (sync)
+                            {
+                                RaiseEventAsync(_onExecutionCancelled, false, true).GetAwaiter().GetResult();
+                            }
+                            else
+                            {
+                                await RaiseEventAsync(_onExecutionCancelled, false, false).ConfigureAwait(false);
+                            }
+
+                            return false;
+                        }
+
+                        Event = @event;
+
+                        if (sync)
+                        {
+                            RaiseEventAsync(@event.Reset(this), false, true).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            await RaiseEventAsync(@event.Reset(this), false, false).ConfigureAwait(false);
+                        }
+
+                        if (!Aborted)
+                        {
+                            continue;
+                        }
+
+                        if (sync)
+                        {
+                            RaiseEventAsync(_onAbortPipeline, false, true).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            await RaiseEventAsync(_onAbortPipeline, false, false).ConfigureAwait(false);
+                        }
+
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Exception = ex.TrimLeading<TargetInvocationException>();
+
+                        ExceptionHandled = false;
+
+                        if (sync)
+                        {
+                            RaiseEventAsync(_onPipelineException, true, true).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            await RaiseEventAsync(_onPipelineException, true, false).ConfigureAwait(false);
+                        }
+
+                        if (!ExceptionHandled)
+                        {
+                            throw;
+                        }
+
+                        if (!Aborted)
+                        {
+                            continue;
+                        }
+
+                        if (sync)
+                        {
+                            RaiseEventAsync(_onAbortPipeline, false, true).GetAwaiter().GetResult();
+                        }
+                        else
+                        {
+                            await RaiseEventAsync(_onAbortPipeline, false, false).ConfigureAwait(false);
+                        }
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private async Task RaiseEventAsync(IPipelineEvent @event, bool ignoreAbort, bool sync)
         {
             ObservedEvents.TryGetValue(@event.GetType(), out var observersForEvent);
 
@@ -251,13 +234,21 @@ namespace Shuttle.Core.Pipelines
             {
                 try
                 {
-                    observer.Invoke(@event);
+                    if (sync)
+                    {
+                        observer.Invoke(@event);
+                    }
+                    else
+                    {
+                        await observer.InvokeAsync(@event).ConfigureAwait(false);
+                    }
                 }
                 catch (Exception ex)
                 {
                     throw new PipelineException(
                         string.Format(_raisingPipelineEvent, @event.Name, StageName, observer.GetObserverTypeName()), ex);
                 }
+
                 if (Aborted && !ignoreAbort)
                 {
                     return;
@@ -265,33 +256,6 @@ namespace Shuttle.Core.Pipelines
             }
         }
 
-        private async Task RaiseEventAsync(IPipelineEvent @event, bool ignoreAbort = false)
-        {
-            ObservedEvents.TryGetValue(@event.GetType(), out var observersForEvent);
-
-            if (observersForEvent == null || observersForEvent.Count == 0)
-            {
-                return;
-            }
-
-            foreach (var observer in observersForEvent)
-            {
-                try
-                {
-                    await observer.InvokeAsync(@event).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    throw new PipelineException(
-                        string.Format(_raisingPipelineEvent, @event.Name, StageName, observer.GetObserverTypeName()), ex);
-                }
-                if (Aborted && !ignoreAbort)
-                {
-                    return;
-                }
-            }
-        }
-        
         protected readonly struct ObserverMethodInvoker
         {
             private readonly IPipelineObserver _pipelineObserver;
@@ -300,6 +264,7 @@ namespace Shuttle.Core.Pipelines
             private readonly AsyncInvokeHandler _asyncInvoker;
 
             private delegate void InvokeHandler(IPipelineObserver pipelineObserver, IPipelineEvent @event);
+
             private delegate Task AsyncInvokeHandler(IPipelineObserver pipelineObserver, IPipelineEvent @event);
 
             public ObserverMethodInvoker(IPipelineObserver pipelineObserver, Type pipelineEventType)
@@ -332,7 +297,7 @@ namespace Shuttle.Core.Pipelines
                     typeof(IPipelineEvent).Module);
 
                 var methodInfoAsync = pipelineObserverType.GetMethod("ExecuteAsync", new[] { pipelineEventType });
-                
+
                 var ilAsync = dynamicMethodAsync.GetILGenerator();
 
                 ilAsync.Emit(OpCodes.Ldarg_0);
@@ -353,7 +318,10 @@ namespace Shuttle.Core.Pipelines
                 await _asyncInvoker.Invoke(_pipelineObserver, @event).ConfigureAwait(false);
             }
 
-            public string GetObserverTypeName() => _pipelineObserver.GetType().FullName;
+            public string GetObserverTypeName()
+            {
+                return _pipelineObserver.GetType().FullName;
+            }
         }
     }
 }
