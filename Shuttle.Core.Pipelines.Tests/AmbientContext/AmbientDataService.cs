@@ -10,10 +10,7 @@ public class AmbientDataService : IAmbientDataService
 
     public AmbientDataService()
     {
-        _ambientData = new AsyncLocal<AmbientData>
-        {
-            Value = new AmbientData()
-        };
+        _ambientData = new AsyncLocal<AmbientData>();
     }
 
     private readonly SemaphoreSlim _lock = new(1, 1);
@@ -95,16 +92,16 @@ public class AmbientDataService : IAmbientDataService
 
     private AmbientData GetAmbientData()
     {
-        if (_ambientData == null)
-        {
-            _ambientData = new AsyncLocal<AmbientData>();
-        }
-
         if (_ambientData.Value == null)
         {
             _ambientData.Value = new AmbientData();
         }
 
         return _ambientData.Value;
+    }
+
+    public void BeginScope()
+    {
+        GetAmbientData();
     }
 }
