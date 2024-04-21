@@ -18,21 +18,14 @@ services.AddPipelineProcessing(builder => {
 
 This will register the `IPipelineFactory` and, using the builder, add all `IPipeline` and `IPipelineObserver` implementations as `Transient`.  The pipeline instances are re-used as they are kept in a pool.
 
-Since pipelines are quite frequently extended by adding observers, a *feature* may be added that adds the relevant observers to a pipeline on creation where the relevant type implements the `IPipelineFeature` interface:
+Since pipelines are quite frequently extended by adding observers, the recommended pattern is to make use of an `IHostedService` implementation that accepts the `IPipelineFactory` dependency:
 
 ```c#
-services.AddPipelineFeature<T>();
-services.AddPipelineFeature(type);
-```
-
-The way this is accomplished is having a feature such as the following:
-
-```c#
-public class SomeFeature : IPipelineFeature
+public class CustomHostedService : IHostedService
 {
     private readonly Type _pipelineType = typeof(InterestingPipeline);
 
-    public SomeFeature(IPipelineFactory pipelineFactory)
+    public CustomHostedService(IPipelineFactory pipelineFactory)
     {
         Guard.AgainstNull(pipelineFactory, nameof(pipelineFactory));
 
@@ -41,8 +34,6 @@ public class SomeFeature : IPipelineFeature
 
     private void PipelineCreated(object sender, PipelineEventArgs e)
     {
-        var pipelineType = ;
-
         if (e.Pipeline.GetType() != _pipelineType
         {
             return;
@@ -50,14 +41,36 @@ public class SomeFeature : IPipelineFeature
 
         e.Pipeline.RegisterObserver(new SomeObserver());
     }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await Task.CompletedTask;
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        _pipelineFactory.PipelineCreated -= OnPipelineCreated;
+
+        await Task.CompletedTask;
+    }
 }
 ```
 
-The above feature could be added to the `IServiceCollection` as follows:
+Typically you would also have a way to register the above `CustomHostedService` with the `IServiceCollection`:
 
 ```c#
-services.AddPipelineFeature<SomeFeature>();
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddCustomPipelineObserver(this IServiceCollection services)
+    {
+        services.AddHostedService<CustomHostedService>();
+
+        return services;
+    }
+}
 ```
+
+The above is a rather naive example but it should give you an idea of how to extend pipelines using the `IPipelineFactory` and `IHostedService` implementations.
 
 ## Overview
 
@@ -75,6 +88,22 @@ state.Add("my-key", "my-key-value");
 Console.WriteLine(state.Get<List<string>>()[0]);
 Console.Write(state.Get<string>("my-key"));
 ```
+
+The `Pipeline` class has a `RegisterStage` method that will return a `PipelineStage` instance.  The `PipelineStage` instance has a `WithEvent` method that will return a `PipelineStageEvent` instance.  This allows for a fluent interface to register events for a pipeline:
+
+### IPipelineObserver
+
+The `IPipelineObserver` interface is used to define the observer that will handle the events:
+
+``` c#
+public interface IPipelineObserver<in TPipelineEvent> : IPipelineObserver where TPipelineEvent : IPipelineEvent
+{
+    void Execute(TPipelineEvent pipelineEvent);
+    Task ExecuteAsync(TPipelineEvent pipelineEvent);
+}
+```
+
+The interface has two methods that can be implemented.  The `Execute` method is used for synchronous processing whereas the `ExecuteAsync` method is used for asynchronous processing.
 
 ## Example
 
@@ -117,6 +146,13 @@ In order for the pipeline to process the events we will have to define one or mo
             state.Replace("value", value);
         }
 
+        public async Task ExecuteAsync(OnAddCharacterA pipelineEvent)
+        {
+			Execute(pipelineEvent);
+
+            await Task.CompletedTask;
+        }
+
         public void Execute(OnAddCharacter pipelineEvent)
         {
             var state = pipelineEvent.Pipeline.State;
@@ -125,6 +161,13 @@ In order for the pipeline to process the events we will have to define one or mo
             value = string.Format("{0}-{1}", value, pipelineEvent.Character);
 
             state.Replace("value", value);
+        }
+
+        public async Task ExecuteAsync(OnAddCharacter pipelineEvent)
+        {
+            Execute(pipelineEvent);
+
+			await Task.CompletedTask;
         }
     }
 ```
@@ -141,7 +184,15 @@ pipeline.RegisterStage("process")
 pipeline.RegisterObserver(new CharacterPipelineObserver());
 
 pipeline.State.Add("value", "start");
-pipeline.Execute();
+
+if (sync)
+{
+    pipeline.Execute();
+}
+else
+{
+	await pipeline.ExecuteAsync();
+}
 
 Console.WriteLine(pipeline.State.Get<string>("value")); // outputs start-A-Z
 ```
