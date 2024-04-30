@@ -18,7 +18,7 @@ namespace Shuttle.Core.Pipelines
             {
                 value.ForEach(item =>
                 {
-                    item.AttemptDispose();
+                    item.TryDispose();
                 });
             }
         }

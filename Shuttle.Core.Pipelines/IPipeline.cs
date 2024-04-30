@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Shuttle.Core.Pipelines
 {
@@ -13,9 +15,11 @@ namespace Shuttle.Core.Pipelines
         IState State { get; }
         void Abort();
         void MarkExceptionHandled();
-        bool Execute();
         IPipelineStage RegisterStage(string name);
         IPipelineStage GetStage(string name);
+        CancellationToken CancellationToken { get; }
+        bool Execute(CancellationToken cancellationToken = default);
+        Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
         IPipeline RegisterObserver(IPipelineObserver pipelineObserver);
     }
 }
