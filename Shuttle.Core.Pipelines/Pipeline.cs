@@ -23,7 +23,7 @@ namespace Shuttle.Core.Pipelines
         protected readonly Dictionary<Type, List<ObserverMethodInvoker>> ObservedEvents = new Dictionary<Type, List<ObserverMethodInvoker>>();
 
         protected readonly List<IPipelineObserver> Observers = new List<IPipelineObserver>();
-        protected readonly List<IPipelineStage> Stages = new List<IPipelineStage>();
+        protected List<IPipelineStage> Stages = new List<IPipelineStage>();
 
         public Pipeline()
         {
@@ -78,6 +78,30 @@ namespace Shuttle.Core.Pipelines
             }
 
             return this;
+        }
+
+        public void Optimize()
+        {
+            var optimizedStages = new List<IPipelineStage>();
+
+            foreach (var stage in Stages)
+            {
+                var events = stage.Events.Where(item => ObservedEvents.ContainsKey(item.GetType()));
+
+                if (events.Any())
+                {
+                    var optimizedStage = new PipelineStage(stage.Name);
+
+                    foreach (var @event in events)
+                    {
+                        optimizedStage.WithEvent(@event);
+                    }
+
+                    optimizedStages.Add(optimizedStage);
+                }
+            }
+
+            Stages = optimizedStages;
         }
 
         public void Abort()

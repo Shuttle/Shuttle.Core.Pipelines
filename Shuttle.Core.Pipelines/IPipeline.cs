@@ -21,5 +21,6 @@ namespace Shuttle.Core.Pipelines
         bool Execute(CancellationToken cancellationToken = default);
         Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
         IPipeline RegisterObserver(IPipelineObserver pipelineObserver);
+        void Optimize();
     }
 }

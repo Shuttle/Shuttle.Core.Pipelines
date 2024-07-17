@@ -43,6 +43,8 @@ namespace Shuttle.Core.Pipelines
                         string.Format(Resources.DuplicatePipelineInstanceException, type.FullName));
                 }
 
+                pipeline.Optimize();
+
                 PipelineCreated?.Invoke(this, new PipelineEventArgs(pipeline));
             }
             else
