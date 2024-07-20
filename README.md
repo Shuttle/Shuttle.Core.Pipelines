@@ -200,4 +200,3 @@ Console.WriteLine(pipeline.State.Get<string>("value")); // outputs start-A-Z
 We can now execute this pipeline with predictable results.
 
 Pipelines afford us the ability to better decouple functionality.  This means that we could re-use the same observer in multiple pipelines enabling us to compose functionality at a more granular level.
-

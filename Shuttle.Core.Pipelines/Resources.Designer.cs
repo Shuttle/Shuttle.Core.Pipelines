@@ -70,6 +70,15 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An `ExecutionScopeFactory` has already been set..
+        /// </summary>
+        public static string ExecutionScopeFactoryAlreadySetException {
+            get {
+                return ResourceManager.GetString("ExecutionScopeFactoryAlreadySetException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The IComponentResolver implementation returned null for pipeline of type &apos;{0}&apos;..
         /// </summary>
         public static string NullPipelineException {
@@ -102,6 +111,15 @@ namespace Shuttle.Core.Pipelines {
         public static string PipelineStageNotFound {
             get {
                 return ResourceManager.GetString("PipelineStageNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A `StageScopeFactory` has already been set..
+        /// </summary>
+        public static string StageScopeFactoryAlreadySetException {
+            get {
+                return ResourceManager.GetString("StageScopeFactoryAlreadySetException", resourceCulture);
             }
         }
         

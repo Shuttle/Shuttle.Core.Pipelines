@@ -14,8 +14,11 @@ namespace Shuttle.Core.Pipelines
         private readonly OnAbortPipeline _onAbortPipeline = new OnAbortPipeline();
         private readonly OnExecutionCancelled _onExecutionCancelled = new OnExecutionCancelled();
         private readonly OnPipelineException _onPipelineException = new OnPipelineException();
-
         private readonly OnPipelineStarting _onPipelineStarting = new OnPipelineStarting();
+        private readonly OnStageCompleted _onStageCompleted = new OnStageCompleted();
+        private readonly Type _onStageCompletedType = typeof(OnStageCompleted);
+        private readonly OnStageStarting _onStageStarting = new OnStageStarting();
+        private readonly Type _onStageStartingType = typeof(OnStageStarting);
 
         private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
         private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
@@ -23,7 +26,10 @@ namespace Shuttle.Core.Pipelines
         protected readonly Dictionary<Type, List<ObserverMethodInvoker>> ObservedEvents = new Dictionary<Type, List<ObserverMethodInvoker>>();
 
         protected readonly List<IPipelineObserver> Observers = new List<IPipelineObserver>();
+
         protected List<IPipelineStage> Stages = new List<IPipelineStage>();
+
+        private bool _initialized;
 
         public Pipeline()
         {
@@ -32,6 +38,7 @@ namespace Shuttle.Core.Pipelines
 
             _onAbortPipeline.Reset(this);
             _onPipelineException.Reset(this);
+            _onExecutionCancelled.Reset(this);
 
             var stage = new PipelineStage("__PipelineEntry");
 
@@ -80,13 +87,25 @@ namespace Shuttle.Core.Pipelines
             return this;
         }
 
-        public void Optimize()
+        private void Initialize()
         {
             var optimizedStages = new List<IPipelineStage>();
 
             foreach (var stage in Stages)
             {
-                var events = stage.Events.Where(item => ObservedEvents.ContainsKey(item.GetType()));
+                var events = new List<IPipelineEvent>();
+
+                if (ObservedEvents.ContainsKey(_onStageStartingType))
+                {
+                    events.Add(_onStageStarting);
+                }
+
+                events.AddRange(stage.Events.Where(item => ObservedEvents.ContainsKey(item.GetType())));
+
+                if (ObservedEvents.ContainsKey(_onStageCompletedType))
+                {
+                    events.Add(_onStageCompleted);
+                }
 
                 if (events.Any())
                 {
@@ -94,7 +113,7 @@ namespace Shuttle.Core.Pipelines
 
                     foreach (var @event in events)
                     {
-                        optimizedStage.WithEvent(@event);
+                        optimizedStage.WithEvent(@event.Reset(this));
                     }
 
                     optimizedStages.Add(optimizedStage);
@@ -149,6 +168,13 @@ namespace Shuttle.Core.Pipelines
 
         private async Task<bool> ExecuteAsync(CancellationToken cancellationToken, bool sync)
         {
+            if (!_initialized)
+            {
+                Initialize();
+
+                _initialized = true;
+            }
+
             Aborted = false;
             Exception = null;
 
@@ -180,11 +206,11 @@ namespace Shuttle.Core.Pipelines
 
                         if (sync)
                         {
-                            RaiseEventAsync(@event.Reset(this), false, true).GetAwaiter().GetResult();
+                            RaiseEventAsync(@event, false, true).GetAwaiter().GetResult();
                         }
                         else
                         {
-                            await RaiseEventAsync(@event.Reset(this), false, false).ConfigureAwait(false);
+                            await RaiseEventAsync(@event, false, false).ConfigureAwait(false);
                         }
 
                         if (!Aborted)

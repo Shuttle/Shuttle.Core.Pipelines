@@ -121,6 +121,9 @@
     <value>The IComponentResolver implementation returned the same pipeline instance of type '{0}'.  Since pipelines are not stateless that cannot be shared.  Please register the pipeline types as transient.</value>
     <comment>0 = pipeline type</comment>
   </data>
+  <data name="ExecutionScopeFactoryAlreadySetException" xml:space="preserve">
+    <value>An `ExecutionScopeFactory` has already been set.</value>
+  </data>
   <data name="NullPipelineException" xml:space="preserve">
     <value>The IComponentResolver implementation returned null for pipeline of type '{0}'.</value>
     <comment>0 = full type name of pipeline requested</comment>
@@ -136,6 +139,9 @@
   <data name="PipelineStageNotFound" xml:space="preserve">
     <value>There is no pipeline stage with a name of '{0}'.</value>
     <comment>0 = unknown stage name</comment>
+  </data>
+  <data name="StageScopeFactoryAlreadySetException" xml:space="preserve">
+    <value>A `StageScopeFactory` has already been set.</value>
   </data>
   <data name="UnhandledPipelineException" xml:space="preserve">
     <value>Unhandled exception during event '{0}': {1}</value>
