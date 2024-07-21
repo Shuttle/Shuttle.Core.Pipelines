@@ -13,39 +13,10 @@ namespace Shuttle.Core.Pipelines
             _state.Clear();
         }
 
-        public void Add(object value)
-        {
-            Guard.AgainstNull(value, nameof(value));
-
-            _state.Add(value.GetType().FullName ?? throw new InvalidOperationException(), value);
-        }
-
         public void Add(string key, object value)
         {
             Guard.AgainstNull(key, nameof(key));
 
-            _state.Add(key, value);
-        }
-
-        public void Add<TItem>(TItem value)
-        {
-            _state.Add(typeof(TItem).FullName ?? throw new InvalidOperationException(), value);
-        }
-
-        public void Add<TItem>(string key, TItem value)
-        {
-            Guard.AgainstNull(key, nameof(key));
-
-            _state.Add(key, value);
-        }
-
-        public void Replace(object value)
-        {
-            Guard.AgainstNull(value, nameof(value));
-
-            var key = value.GetType().FullName ?? throw new InvalidOperationException();
-
-            _state.Remove(key);
             _state.Add(key, value);
         }
 
@@ -57,37 +28,11 @@ namespace Shuttle.Core.Pipelines
             _state.Add(key, value);
         }
 
-        public void Replace<TItem>(TItem value)
-        {
-            var key = typeof(TItem).FullName ?? throw new InvalidOperationException();
-
-            _state.Remove(key);
-            _state.Add(key, value);
-        }
-
-        public void Replace<TItem>(string key, TItem value)
+        public object Get(string key)
         {
             Guard.AgainstNull(key, nameof(key));
 
-            _state.Remove(key);
-            _state.Add(key, value);
-        }
-
-        public TItem Get<TItem>()
-        {
-            return Get<TItem>(typeof(TItem).FullName);
-        }
-
-        public TItem Get<TItem>(string key)
-        {
-            Guard.AgainstNull(key, nameof(key));
-
-            if (_state.TryGetValue(key, out var result))
-            {
-                return (TItem)result;
-            }
-
-            return default;
+            return _state.TryGetValue(key, out var result) ? result : default;
         }
 
         public bool Contains(string key)
@@ -95,6 +40,11 @@ namespace Shuttle.Core.Pipelines
             Guard.AgainstNull(key, nameof(key));
 
             return _state.ContainsKey(key);
+        }
+
+        public bool Remove(string key)
+        {
+            return _state.Remove(key);
         }
     }
 }
