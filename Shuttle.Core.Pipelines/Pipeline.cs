@@ -19,6 +19,7 @@ namespace Shuttle.Core.Pipelines
         private readonly Type _onStageCompletedType = typeof(OnStageCompleted);
         private readonly OnStageStarting _onStageStarting = new OnStageStarting();
         private readonly Type _onStageStartingType = typeof(OnStageStarting);
+        private readonly PipelineEventArgs _pipelineEventArgs;
 
         private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
         private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
@@ -40,6 +41,8 @@ namespace Shuttle.Core.Pipelines
             _onPipelineException.Reset(this);
             _onExecutionCancelled.Reset(this);
 
+            _pipelineEventArgs = new PipelineEventArgs(this);
+
             var stage = new PipelineStage("__PipelineEntry");
 
             stage.WithEvent(_onPipelineStarting);
@@ -47,6 +50,10 @@ namespace Shuttle.Core.Pipelines
             Stages.Add(stage);
         }
 
+        public event EventHandler<PipelineEventArgs> StageStarting;
+        public event EventHandler<PipelineEventArgs> StageCompleted;
+        public event EventHandler<PipelineEventArgs> PipelineStarting;
+        public event EventHandler<PipelineEventArgs> PipelineCompleted;
         public Guid Id { get; }
         public bool ExceptionHandled { get; internal set; }
         public Exception Exception { get; internal set; }
@@ -180,9 +187,13 @@ namespace Shuttle.Core.Pipelines
 
             CancellationToken = cancellationToken;
 
+            PipelineStarting?.Invoke(this, _pipelineEventArgs);
+
             foreach (var stage in Stages)
             {
                 StageName = stage.Name;
+
+                StageStarting?.Invoke(this, _pipelineEventArgs);
 
                 foreach (var @event in stage.Events)
                 {
@@ -266,7 +277,11 @@ namespace Shuttle.Core.Pipelines
                         return false;
                     }
                 }
+
+                StageCompleted?.Invoke(this, _pipelineEventArgs);
             }
+
+            PipelineCompleted?.Invoke(this, _pipelineEventArgs);
 
             return true;
         }

@@ -6,6 +6,11 @@ namespace Shuttle.Core.Pipelines
 {
     public interface IPipeline
     {
+        event EventHandler<PipelineEventArgs> StageStarting;
+        event EventHandler<PipelineEventArgs> StageCompleted;
+        event EventHandler<PipelineEventArgs> PipelineStarting;
+        event EventHandler<PipelineEventArgs> PipelineCompleted;
+
         Guid Id { get; }
         bool ExceptionHandled { get; }
         Exception Exception { get; }
