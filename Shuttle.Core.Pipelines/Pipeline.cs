@@ -167,8 +167,7 @@ namespace Shuttle.Core.Pipelines
 
             var result = Stages.Find(stage => stage.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
-            Guard.Against<IndexOutOfRangeException>(result == null,
-                string.Format(Resources.PipelineStageNotFound, name));
+            Guard.Against<IndexOutOfRangeException>(result == null, string.Format(Resources.PipelineStageNotFound, name));
 
             return result;
         }
@@ -310,8 +309,7 @@ namespace Shuttle.Core.Pipelines
                 }
                 catch (Exception ex)
                 {
-                    throw new PipelineException(
-                        string.Format(_raisingPipelineEvent, @event.Name, StageName, observer.GetObserverTypeName()), ex);
+                    throw new PipelineException(string.Format(_raisingPipelineEvent, @event.Name, StageName, observer.GetObserverTypeName()), ex);
                 }
 
                 if (Aborted && !ignoreAbort)
