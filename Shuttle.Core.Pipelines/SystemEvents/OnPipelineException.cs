@@ -1,8 +1,5 @@
 ﻿namespace Shuttle.Core.Pipelines;
 
-public class OnPipelineException : PipelineEvent
+public class OnPipelineException
 {
-    public OnPipelineException(IPipeline pipeline) : base(pipeline)
-    {
-    }
 }

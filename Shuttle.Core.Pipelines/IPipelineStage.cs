@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Shuttle.Core.Pipelines;
 
 public interface IPipelineStage
 {
-    IEnumerable<PipelineEvent> Events { get; }
+    IEnumerable<Type> Events { get; }
     string Name { get; }
-    IRegisterEventAfter AfterEvent<TPipelineEvent>() where TPipelineEvent : PipelineEvent;
-    IRegisterEventBefore BeforeEvent<TPipelineEvent>() where TPipelineEvent : PipelineEvent;
-    IPipelineStage WithEvent<TPipelineEvent>() where TPipelineEvent : PipelineEvent;
-    IPipelineStage WithEvent(PipelineEvent pipelineEvent);
+    IRegisterEventAfter AfterEvent<TEvent>() where TEvent : class;
+    IRegisterEventBefore BeforeEvent<TEvent>() where TEvent : class;
+    IPipelineStage WithEvent<TEvent>() where TEvent : class;
 }
+    

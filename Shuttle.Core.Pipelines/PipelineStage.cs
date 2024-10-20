@@ -7,34 +7,41 @@ namespace Shuttle.Core.Pipelines;
 
 public class PipelineStage : IPipelineStage
 {
-    protected readonly List<IPipelineEvent> PipelineEvents = new();
+    protected readonly List<Type> PipelineEvents = new();
 
     public PipelineStage(string name)
     {
         Name = Guard.AgainstNull(name, nameof(name));
-        Events = new ReadOnlyCollection<IPipelineEvent>(PipelineEvents);
+        Events = new ReadOnlyCollection<Type>(PipelineEvents);
     }
 
     public string Name { get; }
 
-    public IEnumerable<PipelineEvent> Events { get; }
+    public IEnumerable<Type> Events { get; }
 
-    public IPipelineStage WithEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
+    public IPipelineStage WithEvent<TEvent>() where TEvent : class
     {
-        return WithEvent(new TPipelineEvent());
+        return WithEvent(typeof(TEvent));
     }
 
-    public IPipelineStage WithEvent(IPipelineEvent pipelineEvent)
+    public IPipelineStage WithEvent(Type eventType)
     {
-        PipelineEvents.Add(Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent)));
+        Guard.AgainstNull(eventType);
+
+        if (PipelineEvents.Contains(eventType))
+        {
+            throw new InvalidOperationException(string.Format(Resources.PipelineStageEventAlreadyRegisteredException, Name, eventType.FullName));
+        }
+
+        PipelineEvents.Add(eventType);
 
         return this;
     }
 
-    public IRegisterEventBefore BeforeEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
+    public IRegisterEventBefore BeforeEvent<TEvent>() where TEvent : class
     {
-        var eventName = typeof(TPipelineEvent).FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TPipelineEvent).Name));
-        var pipelineEvent = PipelineEvents.Find(e => (e.GetType().FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TPipelineEvent).Name))).Equals(eventName));
+        var eventName = typeof(TEvent).FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name));
+        var pipelineEvent = PipelineEvents.Find(e => (e.FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name))).Equals(eventName));
 
         if (pipelineEvent == null)
         {
@@ -44,10 +51,10 @@ public class PipelineStage : IPipelineStage
         return new RegisterEventBefore(PipelineEvents, pipelineEvent);
     }
 
-    public IRegisterEventAfter AfterEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
+    public IRegisterEventAfter AfterEvent<TEvent>() where TEvent : class
     {
-        var eventName = typeof(TPipelineEvent).FullName;
-        var pipelineEvent = PipelineEvents.Find(e => (e.GetType().FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TPipelineEvent).Name))).Equals(eventName));
+        var eventName = typeof(TEvent).FullName;
+        var pipelineEvent = PipelineEvents.Find(e => (e.FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name))).Equals(eventName));
 
         if (pipelineEvent == null)
         {

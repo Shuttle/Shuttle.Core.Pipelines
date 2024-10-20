@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Shuttle.Core.Pipelines.Tests;
 
-public class AmbientDataObserver : 
+public class AmbientDataObserver :
     IPipelineObserver<OnAddValue>,
     IPipelineObserver<OnGetValue>,
     IPipelineObserver<OnRemoveValue>
@@ -14,37 +14,22 @@ public class AmbientDataObserver :
     {
         _ambientDataService = ambientDataService;
     }
-    
-    public void Execute(OnAddValue pipelineEvent)
-    {
-        ExecuteAsync(pipelineEvent).GetAwaiter().GetResult();
-    }
 
-    public async Task ExecuteAsync(OnAddValue pipelineEvent)
+    public async Task ExecuteAsync(IPipelineContext<OnAddValue> pipelineContext)
     {
         _ambientDataService.Add("A");
 
         await Task.CompletedTask;
     }
 
-    public void Execute(OnGetValue pipelineEvent)
-    {
-        ExecuteAsync(pipelineEvent).GetAwaiter().GetResult();
-    }
-
-    public async Task ExecuteAsync(OnGetValue pipelineEvent)
+    public async Task ExecuteAsync(IPipelineContext<OnGetValue> pipelineContext)
     {
         Console.WriteLine(_ambientDataService.Current);
 
         await Task.CompletedTask;
     }
 
-    public void Execute(OnRemoveValue pipelineEvent)
-    {
-        ExecuteAsync(pipelineEvent).GetAwaiter().GetResult();
-    }
-
-    public async Task ExecuteAsync(OnRemoveValue pipelineEvent)
+    public async Task ExecuteAsync(IPipelineContext<OnRemoveValue> pipelineContext)
     {
         _ambientDataService.Remove("A");
 
@@ -52,14 +37,14 @@ public class AmbientDataObserver :
     }
 }
 
-public class OnRemoveValue : PipelineEvent
+public class OnRemoveValue
 {
 }
 
-public class OnGetValue : PipelineEvent
+public class OnGetValue
 {
 }
 
-public class OnAddValue : PipelineEvent
+public class OnAddValue
 {
 }

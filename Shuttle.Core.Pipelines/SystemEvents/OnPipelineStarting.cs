@@ -1,8 +1,5 @@
 namespace Shuttle.Core.Pipelines;
 
-public class OnPipelineStarting : PipelineEvent
+public class OnPipelineStarting 
 {
-    public OnPipelineStarting(IPipeline pipeline) : base(pipeline)
-    {
-    }
 }

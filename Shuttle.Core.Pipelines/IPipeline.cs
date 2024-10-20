@@ -8,7 +8,6 @@ public interface IPipeline
 {
     bool Aborted { get; }
     CancellationToken CancellationToken { get; }
-    IPipelineEvent? Event { get; }
     Exception? Exception { get; }
     bool ExceptionHandled { get; }
 
@@ -19,6 +18,7 @@ public interface IPipeline
     Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
     IPipelineStage GetStage(string name);
     void MarkExceptionHandled();
+
     event EventHandler<PipelineEventArgs> PipelineCompleted;
     event EventHandler<PipelineEventArgs> PipelineStarting;
     IPipeline RegisterObserver(IPipelineObserver pipelineObserver);

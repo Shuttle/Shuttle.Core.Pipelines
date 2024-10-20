@@ -6,7 +6,7 @@ public interface IPipelineObserver
 {
 }
 
-public interface IPipelineObserver<in TPipelineEvent> : IPipelineObserver where TPipelineEvent : IPipelineEvent
+public interface IPipelineObserver<TPipelineEvent> : IPipelineObserver where TPipelineEvent : class
 {
-    Task ExecuteAsync(TPipelineEvent pipelineEvent);
+    Task ExecuteAsync(IPipelineContext<TPipelineEvent> pipelineContext);
 }

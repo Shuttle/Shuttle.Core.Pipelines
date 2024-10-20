@@ -1,8 +1,5 @@
 ﻿namespace Shuttle.Core.Pipelines;
 
-public class OnExecutionCancelled : PipelineEvent
+public class OnExecutionCancelled
 {
-    public OnExecutionCancelled(IPipeline pipeline) : base(pipeline)
-    {
-    }
 }

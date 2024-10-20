@@ -5,10 +5,14 @@ namespace Shuttle.Core.Pipelines.Tests;
 
 public class AmbientData
 {
-    public string ActiveValue { get; private set; } = null;
+    private readonly List<string> _values = new();
+    public string ActiveValue { get; private set; }
     public IEnumerable<string> Values => _values.AsReadOnly();
 
-    private readonly List<string> _values = new();
+    public void Activate(string value)
+    {
+        ActiveValue = value;
+    }
 
     public void Add(string value)
     {
@@ -18,11 +22,6 @@ public class AmbientData
         }
 
         _values.Add(value);
-    }
-
-    public void Activate(string value)
-    {
-        ActiveValue = value;
     }
 
     public void Remove(string value)

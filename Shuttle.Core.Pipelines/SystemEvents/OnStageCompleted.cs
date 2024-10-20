@@ -1,8 +1,5 @@
 ﻿namespace Shuttle.Core.Pipelines;
 
-public class OnStageCompleted : PipelineEvent
+public class OnStageCompleted
 {
-    public OnStageCompleted(IPipeline pipeline) : base(pipeline)
-    {
-    }
 }

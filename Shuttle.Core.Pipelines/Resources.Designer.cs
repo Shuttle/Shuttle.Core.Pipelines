@@ -61,6 +61,15 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find the constructor for type &apos;{0}&apos;..
+        /// </summary>
+        public static string ContextConstructorException {
+            get {
+                return ResourceManager.GetString("ContextConstructorException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The IComponentResolver implementation returned the same pipeline instance of type &apos;{0}&apos;.  Since pipelines are not stateless that cannot be shared.  Please register the pipeline types as transient..
         /// </summary>
         public static string DuplicatePipelineInstanceException {
@@ -99,9 +108,9 @@ namespace Shuttle.Core.Pipelines {
         /// <summary>
         ///   Looks up a localized string similar to Method &apos;ExecuteAsync()&apos; could not be found.
         /// </summary>
-        public static string ObserverMethodNotFound {
+        public static string ObserverMethodNotFoundException {
             get {
-                return ResourceManager.GetString("ObserverMethodNotFound", resourceCulture);
+                return ResourceManager.GetString("ObserverMethodNotFoundException", resourceCulture);
             }
         }
         
@@ -111,6 +120,15 @@ namespace Shuttle.Core.Pipelines {
         public static string PipelineEventActivationException {
             get {
                 return ResourceManager.GetString("PipelineEventActivationException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pipeline stage named &apos;{0}&apos; already has an event with name &apos;{1}&apos;..
+        /// </summary>
+        public static string PipelineStageEventAlreadyRegisteredException {
+            get {
+                return ResourceManager.GetString("PipelineStageEventAlreadyRegisteredException", resourceCulture);
             }
         }
         
