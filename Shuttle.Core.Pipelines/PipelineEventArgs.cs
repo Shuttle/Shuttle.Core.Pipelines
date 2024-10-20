@@ -1,15 +1,14 @@
-﻿using Shuttle.Core.Contract;
-using System;
+﻿using System;
+using Shuttle.Core.Contract;
 
-namespace Shuttle.Core.Pipelines
+namespace Shuttle.Core.Pipelines;
+
+public class PipelineEventArgs : EventArgs
 {
-    public class PipelineEventArgs : EventArgs
+    public PipelineEventArgs(IPipeline pipeline)
     {
-        public PipelineEventArgs(IPipeline pipeline)
-        {
-            Pipeline = Guard.AgainstNull(pipeline, nameof(pipeline));
-        }
-
-        public IPipeline Pipeline { get; }
+        Pipeline = Guard.AgainstNull(pipeline, nameof(pipeline));
     }
+
+    public IPipeline Pipeline { get; }
 }

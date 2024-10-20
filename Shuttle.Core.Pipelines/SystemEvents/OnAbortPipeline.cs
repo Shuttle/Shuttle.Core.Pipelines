@@ -1,6 +1,8 @@
-﻿namespace Shuttle.Core.Pipelines
+﻿namespace Shuttle.Core.Pipelines;
+
+public class OnAbortPipeline : PipelineEvent
 {
-    public class OnAbortPipeline : PipelineEvent
+    public OnAbortPipeline(IPipeline pipeline) : base(pipeline)
     {
     }
 }

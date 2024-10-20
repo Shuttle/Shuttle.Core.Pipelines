@@ -1,30 +1,28 @@
 using System;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace Shuttle.Core.Pipelines
+namespace Shuttle.Core.Pipelines;
+
+public interface IPipeline
 {
-    public interface IPipeline
-    {
-        event EventHandler<PipelineEventArgs> StageStarting;
-        event EventHandler<PipelineEventArgs> StageCompleted;
-        event EventHandler<PipelineEventArgs> PipelineStarting;
-        event EventHandler<PipelineEventArgs> PipelineCompleted;
+    bool Aborted { get; }
+    CancellationToken CancellationToken { get; }
+    IPipelineEvent? Event { get; }
+    Exception? Exception { get; }
+    bool ExceptionHandled { get; }
 
-        Guid Id { get; }
-        bool ExceptionHandled { get; }
-        Exception Exception { get; }
-        bool Aborted { get; }
-        string StageName { get; }
-        IPipelineEvent Event { get; }
-        IState State { get; }
-        void Abort();
-        void MarkExceptionHandled();
-        IPipelineStage RegisterStage(string name);
-        IPipelineStage GetStage(string name);
-        CancellationToken CancellationToken { get; }
-        bool Execute(CancellationToken cancellationToken = default);
-        Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
-        IPipeline RegisterObserver(IPipelineObserver pipelineObserver);
-    }
+    Guid Id { get; }
+    string StageName { get; }
+    IState State { get; }
+    void Abort();
+    Task<bool> ExecuteAsync(CancellationToken cancellationToken = default);
+    IPipelineStage GetStage(string name);
+    void MarkExceptionHandled();
+    event EventHandler<PipelineEventArgs> PipelineCompleted;
+    event EventHandler<PipelineEventArgs> PipelineStarting;
+    IPipeline RegisterObserver(IPipelineObserver pipelineObserver);
+    IPipelineStage RegisterStage(string name);
+    event EventHandler<PipelineEventArgs> StageCompleted;
+    event EventHandler<PipelineEventArgs> StageStarting;
 }

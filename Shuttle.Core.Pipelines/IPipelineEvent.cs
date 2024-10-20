@@ -1,9 +1,6 @@
-﻿namespace Shuttle.Core.Pipelines
+﻿namespace Shuttle.Core.Pipelines;
+
+public interface IPipelineEvent
 {
-    public interface IPipelineEvent
-    {
-        IPipeline Pipeline { get; }
-        string Name { get; }
-        IPipelineEvent Reset(IPipeline pipeline);
-    }
+    IPipeline Pipeline { get; }
 }

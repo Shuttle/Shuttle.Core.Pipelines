@@ -97,6 +97,24 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method &apos;ExecuteAsync()&apos; could not be found.
+        /// </summary>
+        public static string ObserverMethodNotFound {
+            get {
+                return ResourceManager.GetString("ObserverMethodNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not create an instance of type &apos;{0}&apos; that implements &apos;IPipelineEvent&apos;..
+        /// </summary>
+        public static string PipelineEventActivationException {
+            get {
+                return ResourceManager.GetString("PipelineEventActivationException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pipeline stage &apos;{0}&apos; has no event of type &apos;{1}&apos;..
         /// </summary>
         public static string PipelineStageEventNotRegistered {

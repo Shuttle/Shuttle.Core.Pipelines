@@ -9,18 +9,7 @@ namespace Shuttle.Core.Pipelines.Tests;
 public class PipelineFixture
 {
     [Test]
-    public void Should_be_able_to_execute_a_valid_pipeline()
-    {
-        Should_be_able_to_execute_a_valid_pipeline_async(true).GetAwaiter().GetResult();
-    }
-
-    [Test]
     public async Task Should_be_able_to_execute_a_valid_pipeline_async()
-    {
-        await Should_be_able_to_execute_a_valid_pipeline_async(false);
-    }
-
-    private async Task Should_be_able_to_execute_a_valid_pipeline_async(bool sync)
     {
         var pipeline = new Pipeline();
 
