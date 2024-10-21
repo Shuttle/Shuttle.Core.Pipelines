@@ -7,7 +7,7 @@ public class PipelineEventArgs : EventArgs
 {
     public PipelineEventArgs(IPipeline pipeline)
     {
-        Pipeline = Guard.AgainstNull(pipeline, nameof(pipeline));
+        Pipeline = Guard.AgainstNull(pipeline);
     }
 
     public IPipeline Pipeline { get; }

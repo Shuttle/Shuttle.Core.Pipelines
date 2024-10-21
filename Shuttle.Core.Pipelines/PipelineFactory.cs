@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines;
@@ -8,9 +9,11 @@ public class PipelineFactory : IPipelineFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private ReusableObjectPool<object> _pool;
+    private readonly PipelineOptions _pipelineOptions;
 
-    public PipelineFactory(IServiceProvider serviceProvider)
+    public PipelineFactory(IOptions<PipelineOptions> pipelineOptions, IServiceProvider serviceProvider)
     {
+        _pipelineOptions = Guard.AgainstNull(pipelineOptions).Value;
         _serviceProvider = Guard.AgainstNull(serviceProvider);
         _pool = new();
     }
@@ -51,7 +54,12 @@ public class PipelineFactory : IPipelineFactory
 
     public void ReleasePipeline(IPipeline pipeline)
     {
-        Guard.AgainstNull(pipeline, nameof(pipeline));
+        if (!_pipelineOptions.ReusePipelines)
+        {
+            return;
+        }
+
+        Guard.AgainstNull(pipeline);
 
         _pool.Release(pipeline);
 

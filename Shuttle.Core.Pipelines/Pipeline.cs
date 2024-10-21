@@ -64,9 +64,7 @@ public class Pipeline : IPipeline
 
     public IPipeline RegisterObserver(IPipelineObserver pipelineObserver)
     {
-        Guard.AgainstNull(pipelineObserver, nameof(pipelineObserver));
-
-        Observers.Add(pipelineObserver);
+        Observers.Add(Guard.AgainstNull(pipelineObserver));
 
         var observerInterfaces = pipelineObserver.GetType().GetInterfaces();
 
@@ -114,9 +112,7 @@ public class Pipeline : IPipeline
 
     public IPipelineStage RegisterStage(string name)
     {
-        Guard.AgainstNullOrEmptyString(name, nameof(name));
-
-        var stage = new PipelineStage(name);
+        var stage = new PipelineStage(Guard.AgainstNullOrEmptyString(name));
 
         Stages.Add(stage);
 
@@ -125,7 +121,7 @@ public class Pipeline : IPipeline
 
     public IPipelineStage GetStage(string name)
     {
-        Guard.AgainstNullOrEmptyString(name, nameof(name));
+        Guard.AgainstNullOrEmptyString(name);
 
         var result = Stages.Find(stage => stage.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 

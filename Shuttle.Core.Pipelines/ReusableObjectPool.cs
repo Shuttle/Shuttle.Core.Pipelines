@@ -21,7 +21,7 @@ public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposab
 
     public ReusableObjectPool(Func<Type, TReusableObject> factoryMethod)
     {
-        _factoryMethod = Guard.AgainstNull(factoryMethod, nameof(factoryMethod));
+        _factoryMethod = Guard.AgainstNull(factoryMethod);
     }
 
     public void Dispose()
@@ -37,7 +37,7 @@ public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposab
 
     public bool Contains(TReusableObject instance)
     {
-        Guard.AgainstNull(instance, nameof(instance));
+        Guard.AgainstNull(instance);
 
         lock (Lock)
         {
@@ -47,7 +47,7 @@ public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposab
 
     public TReusableObject? Get(Type key)
     {
-        Guard.AgainstNull(key, nameof(key));
+        Guard.AgainstNull(key);
 
         lock (Lock)
         {
@@ -73,7 +73,7 @@ public class ReusableObjectPool<TReusableObject> : ReusableObjectPool, IDisposab
 
     public void Release(TReusableObject instance)
     {
-        Guard.AgainstNull(instance, nameof(instance));
+        Guard.AgainstNull(instance);
 
         lock (Lock)
         {

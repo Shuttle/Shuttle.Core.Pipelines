@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shuttle.Core.Contract;
@@ -11,14 +12,22 @@ public class PipelineProcessingBuilder
 {
     public PipelineProcessingBuilder(IServiceCollection services)
     {
-        Services = Guard.AgainstNull(services, nameof(services));
+        Services = Guard.AgainstNull(services);
     }
 
     public IServiceCollection Services { get; }
 
+    public PipelineOptions Options
+    {
+        get => _pipelineOptions;
+        set => _pipelineOptions = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    private PipelineOptions _pipelineOptions = new();
+
     public async Task<PipelineProcessingBuilder> AddAssemblyAsync(Assembly assembly)
     {
-        Guard.AgainstNull(assembly, nameof(assembly));
+        Guard.AgainstNull(assembly);
 
         var reflectionService = new ReflectionService();
 

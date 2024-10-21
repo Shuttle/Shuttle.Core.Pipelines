@@ -11,7 +11,7 @@ public class PipelineStage : IPipelineStage
 
     public PipelineStage(string name)
     {
-        Name = Guard.AgainstNull(name, nameof(name));
+        Name = Guard.AgainstNull(name);
         Events = new ReadOnlyCollection<Type>(PipelineEvents);
     }
 

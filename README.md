@@ -27,7 +27,7 @@ public class CustomHostedService : IHostedService
 
     public CustomHostedService(IPipelineFactory pipelineFactory)
     {
-        Guard.AgainstNull(pipelineFactory, nameof(pipelineFactory));
+        Guard.AgainstNull(pipelineFactory);
 
         pipelineFactory.PipelineCreated += PipelineCreated;
     }
