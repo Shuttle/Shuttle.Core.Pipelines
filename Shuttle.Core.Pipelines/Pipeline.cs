@@ -85,9 +85,7 @@ public class Pipeline : IPipeline
 
             var genericType = _pipelineObserverType.MakeGenericType(pipelineEventType);
 
-            var methodInfo = pipelineObserver.GetType()
-                .GetInterfaceMap(genericType)
-                .TargetMethods.SingleOrDefault();
+            var methodInfo = pipelineObserver.GetType().GetInterfaceMap(genericType).TargetMethods.SingleOrDefault();
 
             if (methodInfo == null)
             {

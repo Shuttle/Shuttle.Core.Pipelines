@@ -25,13 +25,13 @@ public class PipelineProcessingBuilder
 
     private PipelineOptions _pipelineOptions = new();
 
-    public async Task<PipelineProcessingBuilder> AddAssemblyAsync(Assembly assembly)
+    public PipelineProcessingBuilder AddAssembly(Assembly assembly)
     {
         Guard.AgainstNull(assembly);
 
         var reflectionService = new ReflectionService();
 
-        foreach (var type in await reflectionService.GetTypesAssignableToAsync<IPipeline>(assembly))
+        foreach (var type in reflectionService.GetTypesAssignableToAsync<IPipeline>(assembly).GetAwaiter().GetResult())
         {
             if (type.IsInterface || type.IsAbstract || Services.Contains(ServiceDescriptor.Transient(type, type)))
             {
@@ -41,7 +41,7 @@ public class PipelineProcessingBuilder
             Services.AddTransient(type, type);
         }
 
-        foreach (var type in await reflectionService.GetTypesAssignableToAsync<IPipelineObserver>(assembly))
+        foreach (var type in reflectionService.GetTypesAssignableToAsync<IPipelineObserver>(assembly).GetAwaiter().GetResult())
         {
             if (type.IsInterface || type.IsAbstract)
             {
