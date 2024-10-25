@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Shuttle.Core.Contract;
 using Shuttle.Core.Reflection;
@@ -31,7 +29,7 @@ public class PipelineProcessingBuilder
 
         var reflectionService = new ReflectionService();
 
-        foreach (var type in reflectionService.GetTypesAssignableToAsync<IPipeline>(assembly).GetAwaiter().GetResult())
+        foreach (var type in reflectionService.GetTypesAssignableToExpandedAsync<IPipeline>(assembly).GetAwaiter().GetResult())
         {
             if (type.IsInterface || type.IsAbstract || Services.Contains(ServiceDescriptor.Transient(type, type)))
             {
@@ -41,7 +39,7 @@ public class PipelineProcessingBuilder
             Services.AddTransient(type, type);
         }
 
-        foreach (var type in reflectionService.GetTypesAssignableToAsync<IPipelineObserver>(assembly).GetAwaiter().GetResult())
+        foreach (var type in reflectionService.GetTypesAssignableToExpandedAsync<IPipelineObserver>(assembly).GetAwaiter().GetResult())
         {
             if (type.IsInterface || type.IsAbstract)
             {
