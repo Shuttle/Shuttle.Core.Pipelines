@@ -29,7 +29,7 @@ public class PipelineProcessingBuilder
 
         var reflectionService = new ReflectionService();
 
-        foreach (var type in reflectionService.GetTypesAssignableToExpandedAsync<IPipeline>(assembly).GetAwaiter().GetResult())
+        foreach (var type in reflectionService.GetTypesCastableToAsync<IPipeline>(assembly).GetAwaiter().GetResult())
         {
             if (type.IsInterface || type.IsAbstract || Services.Contains(ServiceDescriptor.Transient(type, type)))
             {
@@ -39,7 +39,7 @@ public class PipelineProcessingBuilder
             Services.AddTransient(type, type);
         }
 
-        foreach (var type in reflectionService.GetTypesAssignableToExpandedAsync<IPipelineObserver>(assembly).GetAwaiter().GetResult())
+        foreach (var type in reflectionService.GetTypesCastableToAsync<IPipelineObserver>(assembly).GetAwaiter().GetResult())
         {
             if (type.IsInterface || type.IsAbstract)
             {
