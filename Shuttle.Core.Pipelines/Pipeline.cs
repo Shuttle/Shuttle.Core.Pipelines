@@ -80,18 +80,13 @@ public class Pipeline : IPipeline
         }
 
         var parameters = handler.Method.GetParameters();
-        var providers = new List<IMappedDependencyProvider>();
         var pipelineEventType = typeof(TPipelineEvent);
 
         foreach (var parameter in parameters)
         {
             var parameterType = parameter.ParameterType;
 
-            if (!parameterType.IsCastableTo(typeof(IPipelineContext)))
-            {
-                providers.Add(new ServiceProviderMappedDependencyProvider(_serviceProvider, parameterType));
-            }
-            else
+            if (parameterType.IsCastableTo(typeof(IPipelineContext)))
             {
                 var genericArguments = parameterType.GetGenericArguments();
 
@@ -100,13 +95,11 @@ public class Pipeline : IPipeline
                 {
                     throw new ArgumentException(string.Format(Resources.PipelineContextTypeException, pipelineEventType.Name, genericArguments[0].Name));
                 }
-
-                providers.Add(new PipelineContextMappedDependencyProvider(new PipelineContext<TPipelineEvent>(this)));
             }
         }
 
         _delegates.TryAdd(pipelineEventType, new());
-        _delegates[pipelineEventType].Add(new(handler, providers));
+        _delegates[pipelineEventType].Add(new(handler, handler.Method.GetParameters().Select(item => item.ParameterType)));
 
         return this;
     }
@@ -272,28 +265,28 @@ public class Pipeline : IPipeline
             return;
         }
 
+        PipelineContextConstructorInvoker? pipelineContextConstructor;
+
+        await _lock.WaitAsync(CancellationToken);
+
+        try
+        {
+            if (!_pipelineContextConstructors.TryGetValue(eventType, out pipelineContextConstructor))
+            {
+                pipelineContextConstructor = new(this, eventType);
+
+                _pipelineContextConstructors.Add(eventType, pipelineContextConstructor);
+            }
+        }
+        finally
+        {
+            _lock.Release();
+        }
+
+        var pipelineContext = pipelineContextConstructor.Create();
+
         if (hasObservers)
         {
-            PipelineContextConstructorInvoker? pipelineContextConstructor;
-
-            await _lock.WaitAsync(CancellationToken);
-
-            try
-            {
-                if (!_pipelineContextConstructors.TryGetValue(eventType, out pipelineContextConstructor))
-                {
-                    pipelineContextConstructor = new(this, eventType);
-
-                    _pipelineContextConstructors.Add(eventType, pipelineContextConstructor);
-                }
-            }
-            finally
-            {
-                _lock.Release();
-            }
-
-            var pipelineContext = pipelineContextConstructor.Create();
-
             foreach (var observer in observersForEvent!)
             {
                 try
@@ -316,9 +309,9 @@ public class Pipeline : IPipeline
         {
             foreach (var mappedDelegate in delegatesForEvent!)
             {
-                if (mappedDelegate.HasArgs)
+                if (mappedDelegate.HasParameters)
                 {
-                    await (Task)mappedDelegate.Handler.DynamicInvoke(mappedDelegate.GetArgs())!;
+                    await (Task)mappedDelegate.Handler.DynamicInvoke(mappedDelegate.GetParameters(_serviceProvider, pipelineContext))!;
                 }
                 else
                 {
