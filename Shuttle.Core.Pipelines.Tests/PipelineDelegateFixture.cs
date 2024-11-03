@@ -120,7 +120,7 @@ public class PipelineDelegateFixture
     }
 
     [Test]
-    public async Task Should_not_be_able_to_register_delegate_requesting_wrong_event_type()
+    public void Should_not_be_able_to_register_delegate_requesting_wrong_event_type()
     {
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
@@ -134,5 +134,47 @@ public class PipelineDelegateFixture
                 await Task.CompletedTask;
             });
         }, Throws.Exception);
+    }
+
+    [Test]
+    public async Task Should_be_able_to_register_multiple_delegates_for_the_same_event_type()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSingleton<MockAuthenticateObserver>();
+
+        var serviceProvider = services.BuildServiceProvider();
+
+        var pipeline = new Pipeline(serviceProvider);
+
+        pipeline
+            .RegisterStage("Stage")
+            .WithEvent<MockPipelineEvent1>()
+            .WithEvent<MockPipelineEvent2>()
+            .WithEvent<MockPipelineEvent3>();
+
+        var callSequence = string.Empty;
+
+        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        {
+            callSequence += "1";
+            await Task.CompletedTask;
+        });
+
+        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        {
+            callSequence += "1";
+            await Task.CompletedTask;
+        });
+
+        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        {
+            callSequence += "1";
+            await Task.CompletedTask;
+        });
+
+        await pipeline.ExecuteAsync(CancellationToken.None);
+
+        Assert.That(callSequence, Is.EqualTo("111"));
     }
 }
