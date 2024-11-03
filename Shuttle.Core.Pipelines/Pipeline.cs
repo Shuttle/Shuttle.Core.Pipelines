@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using Shuttle.Core.Contract;
@@ -12,30 +11,31 @@ namespace Shuttle.Core.Pipelines;
 
 public class Pipeline : IPipeline
 {
+    private readonly Dictionary<Type, List<MappedDelegate>> _delegates = new();
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly Dictionary<Type, List<PipelineObserverMethodInvoker>> _observerMethodInvokers = new();
+
     private readonly Type _onAbortPipelineType = typeof(OnAbortPipeline);
     private readonly Type _onExecutionCancelledType = typeof(OnExecutionCancelled);
     private readonly Type _onPipelineExceptionType = typeof(OnPipelineException);
     private readonly Type _onStageCompletedType = typeof(OnStageCompleted);
     private readonly Type _onStageStartingType = typeof(OnStageStarting);
-    private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
+    private readonly Dictionary<Type, PipelineContextConstructorInvoker> _pipelineContextConstructors = new();
 
     private readonly PipelineEventArgs _pipelineEventArgs;
+    private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
 
     private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
-
-    private readonly Dictionary<Type, List<ObserverMethodInvoker>> _observerMethodInvokers = new();
-    private readonly Dictionary<Type, ContextConstructorInvoker> _pipelineContextConstructors = new();
-
-    protected readonly List<IPipelineObserver> Observers = new();
-
-    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly IServiceProvider _serviceProvider;
 
     private bool _initialized;
 
     protected List<IPipelineStage> Stages = new();
 
-    public Pipeline()
+    public Pipeline(IServiceProvider serviceProvider)
     {
+        _serviceProvider = Guard.AgainstNull(serviceProvider);
+
         Id = Guid.NewGuid();
         State = new State();
 
@@ -64,36 +64,49 @@ public class Pipeline : IPipeline
 
     public IPipeline RegisterObserver(IPipelineObserver pipelineObserver)
     {
-        Observers.Add(Guard.AgainstNull(pipelineObserver));
+        return RegisterObserver(new InstancePipelineObserverProvider(pipelineObserver));
+    }
 
-        var observerInterfaces = pipelineObserver.GetType().GetInterfaces();
+    public IPipeline RegisterObserver(Type observerType)
+    {
+        return RegisterObserver(new ServiceProviderPipelineObserverProvider(_serviceProvider, Guard.AgainstNull(observerType)));
+    }
 
-        var eventInterfaces = observerInterfaces
-            .Where(item => 
-                item.IsGenericType && 
-                _pipelineObserverType.GetTypeInfo().IsAssignableFrom(item.GetGenericTypeDefinition()) && 
-                item.Name.StartsWith("IPipelineObserver`"));
-
-        foreach (var eventInterface in eventInterfaces)
+    public IPipeline MapObserver<TPipelineEvent>(Delegate handler) where TPipelineEvent : class
+    {
+        if (!typeof(Task).IsAssignableFrom(Guard.AgainstNull(handler).Method.ReturnType))
         {
-            var pipelineEventType = eventInterface.GetGenericArguments()[0];
-
-            if (!_observerMethodInvokers.TryGetValue(pipelineEventType, out _))
-            {
-                _observerMethodInvokers.Add(pipelineEventType, new());
-            }
-
-            var genericType = _pipelineObserverType.MakeGenericType(pipelineEventType);
-
-            var methodInfo = pipelineObserver.GetType().GetInterfaceMap(genericType).TargetMethods.SingleOrDefault();
-
-            if (methodInfo == null)
-            {
-                throw new PipelineException(string.Format(Resources.ObserverMethodNotFoundException, pipelineObserver.GetType().FullName, eventInterface.FullName));
-            }
-
-            _observerMethodInvokers[pipelineEventType].Add(new(pipelineObserver, methodInfo));
+            throw new ApplicationException(Resources.AsyncDelegateRequiredException);
         }
+
+        var parameters = handler.Method.GetParameters();
+        var providers = new List<IMappedDependencyProvider>();
+        var pipelineEventType = typeof(TPipelineEvent);
+
+        foreach (var parameter in parameters)
+        {
+            var parameterType = parameter.ParameterType;
+
+            if (!parameterType.IsCastableTo(typeof(IPipelineContext)))
+            {
+                providers.Add(new ServiceProviderMappedDependencyProvider(_serviceProvider, parameterType));
+            }
+            else
+            {
+                var genericArguments = parameterType.GetGenericArguments();
+
+                if (genericArguments.Length == 1 &&
+                    Guard.AgainstNull(genericArguments[0]) != pipelineEventType)
+                {
+                    throw new ArgumentException(string.Format(Resources.PipelineContextTypeException, pipelineEventType.Name, genericArguments[0].Name));
+                }
+
+                providers.Add(new PipelineContextMappedDependencyProvider(new PipelineContext<TPipelineEvent>(this)));
+            }
+        }
+
+        _delegates.TryAdd(pipelineEventType, new());
+        _delegates[pipelineEventType].Add(new(handler, providers));
 
         return this;
     }
@@ -156,7 +169,8 @@ public class Pipeline : IPipeline
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        await RaiseEventAsync(_onExecutionCancelledType, false).ConfigureAwait(false);
+                        await
+                            RaiseEventAsync(_onExecutionCancelledType, false).ConfigureAwait(false);
 
                         return false;
                     }
@@ -204,6 +218,11 @@ public class Pipeline : IPipeline
         return true;
     }
 
+    private bool HandlesType(Type type)
+    {
+        return _observerMethodInvokers.ContainsKey(type) || _delegates.ContainsKey(type);
+    }
+
     private void Initialize()
     {
         var optimizedStages = new List<IPipelineStage>();
@@ -212,14 +231,14 @@ public class Pipeline : IPipeline
         {
             var events = new List<Type>();
 
-            if (_observerMethodInvokers.ContainsKey(_onStageStartingType))
+            if (HandlesType(_onStageStartingType))
             {
                 events.Add(_onStageStartingType);
             }
 
-            events.AddRange(stage.Events.Where(item => _observerMethodInvokers.ContainsKey(item)));
+            events.AddRange(stage.Events.Where(HandlesType));
 
-            if (_observerMethodInvokers.ContainsKey(_onStageCompletedType))
+            if (HandlesType(_onStageCompletedType))
             {
                 events.Add(_onStageCompletedType);
             }
@@ -243,126 +262,104 @@ public class Pipeline : IPipeline
     private async Task RaiseEventAsync(Type eventType, bool ignoreAbort)
     {
         _observerMethodInvokers.TryGetValue(eventType, out var observersForEvent);
+        _delegates.TryGetValue(eventType, out var delegatesForEvent);
 
-        if (observersForEvent == null || observersForEvent.Count == 0)
+        var hasObservers = observersForEvent is { Count: > 0 };
+        var hasDelegates = delegatesForEvent is { Count: > 0 };
+
+        if (!hasObservers && !hasDelegates)
         {
             return;
         }
 
-        ContextConstructorInvoker? pipelineContextConstructor;
-
-        await _lock.WaitAsync(CancellationToken);
-
-        try
+        if (hasObservers)
         {
-            if (!_pipelineContextConstructors.TryGetValue(eventType, out pipelineContextConstructor))
-            {
-                pipelineContextConstructor = new(this, eventType);
+            PipelineContextConstructorInvoker? pipelineContextConstructor;
 
-                _pipelineContextConstructors.Add(eventType, pipelineContextConstructor);
-            }
-        }
-        finally
-        {
-            _lock.Release();
-        }
+            await _lock.WaitAsync(CancellationToken);
 
-        var pipelineContext = pipelineContextConstructor.Create();
-
-        foreach (var observer in observersForEvent)
-        {
             try
             {
-                await observer.InvokeAsync(pipelineContext).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observer.PipelineObserver.GetType().FullName), ex);
-            }
-
-            if (Aborted && !ignoreAbort)
-            {
-                return;
-            }
-        }
-    }
-
-    internal class ContextConstructorInvoker
-    {
-        private readonly IPipeline _pipeline;
-        private readonly Type _pipelineType = typeof(IPipeline);
-        private static readonly Type PipelineContext = typeof(PipelineContext<>);
-
-        private readonly ConstructorInvokeHandler _constructorInvoker;
-
-        public ContextConstructorInvoker(IPipeline pipeline, Type eventType)
-        {
-            _pipeline = pipeline;
-
-            var dynamicMethod = new DynamicMethod(string.Empty, typeof(object),
-                new[]
+                if (!_pipelineContextConstructors.TryGetValue(eventType, out pipelineContextConstructor))
                 {
-                    typeof(object)
-                }, PipelineContext.Module);
+                    pipelineContextConstructor = new(this, eventType);
 
-            var il = dynamicMethod.GetILGenerator();
-
-            il.Emit(OpCodes.Ldarg_0);
-
-            var contextType = PipelineContext.MakeGenericType(eventType);
-            var constructorInfo = contextType.GetConstructor(new[]
+                    _pipelineContextConstructors.Add(eventType, pipelineContextConstructor);
+                }
+            }
+            finally
             {
-                _pipelineType
-            });
-
-            if (constructorInfo == null)
-            {
-                throw new InvalidOperationException(string.Format(Resources.ContextConstructorException, contextType.FullName));
+                _lock.Release();
             }
 
-            il.Emit(OpCodes.Newobj, constructorInfo);
-            il.Emit(OpCodes.Ret);
+            var pipelineContext = pipelineContextConstructor.Create();
 
-            _constructorInvoker = (ConstructorInvokeHandler)dynamicMethod.CreateDelegate(typeof(ConstructorInvokeHandler));
+            foreach (var observer in observersForEvent!)
+            {
+                try
+                {
+                    await observer.InvokeAsync(pipelineContext).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observer.PipelineObserverProvider.GetType().FullName), ex);
+                }
+
+                if (Aborted && !ignoreAbort)
+                {
+                    return;
+                }
+            }
         }
 
-        public object Create()
+        if (hasDelegates)
         {
-            return _constructorInvoker(_pipeline);
+            foreach (var mappedDelegate in delegatesForEvent!)
+            {
+                if (mappedDelegate.HasArgs)
+                {
+                    await (Task)mappedDelegate.Handler.DynamicInvoke(mappedDelegate.GetArgs())!;
+                }
+                else
+                {
+                    await (Task)mappedDelegate.Handler.DynamicInvoke()!;
+                }
+            }
         }
-
-        private delegate object ConstructorInvokeHandler(IPipeline pipeline);
     }
 
-    internal readonly struct ObserverMethodInvoker
+    private IPipeline RegisterObserver(IPipelineObserverProvider pipelineObserverProvider)
     {
-        public IPipelineObserver PipelineObserver { get; }
+        var observerType = pipelineObserverProvider.GetObserverType();
+        var observerInterfaces = observerType.GetInterfaces();
 
-        private static readonly Type PipelineContextType = typeof(PipelineContext<>);
+        var eventInterfaces = observerInterfaces
+            .Where(item =>
+                item.IsGenericType &&
+                _pipelineObserverType.GetTypeInfo().IsAssignableFrom(item.GetGenericTypeDefinition()) &&
+                item.Name.StartsWith("IPipelineObserver`"));
 
-        private readonly AsyncInvokeHandler _asyncInvoker;
-
-        public ObserverMethodInvoker(IPipelineObserver pipelineObserver, MethodInfo methodInfo)
+        foreach (var eventInterface in eventInterfaces)
         {
-            PipelineObserver = Guard.AgainstNull(pipelineObserver);
+            var pipelineEventType = eventInterface.GetGenericArguments()[0];
 
-            var dynamicMethod = new DynamicMethod(string.Empty, typeof(Task), new[] { typeof(object), typeof(object) }, PipelineContextType.Module);
+            if (!_observerMethodInvokers.TryGetValue(pipelineEventType, out _))
+            {
+                _observerMethodInvokers.Add(pipelineEventType, new());
+            }
 
-            var il = dynamicMethod.GetILGenerator();
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldarg_1);
+            var genericType = _pipelineObserverType.MakeGenericType(pipelineEventType);
 
-            il.EmitCall(OpCodes.Callvirt, methodInfo, null);
-            il.Emit(OpCodes.Ret);
+            var methodInfo = observerType.GetInterfaceMap(genericType).TargetMethods.SingleOrDefault();
 
-            _asyncInvoker = (AsyncInvokeHandler)dynamicMethod.CreateDelegate(typeof(AsyncInvokeHandler));
+            if (methodInfo == null)
+            {
+                throw new PipelineException(string.Format(Resources.ObserverMethodNotFoundException, observerType.FullName, eventInterface.FullName));
+            }
+
+            _observerMethodInvokers[pipelineEventType].Add(new(pipelineObserverProvider, methodInfo));
         }
 
-        public async Task InvokeAsync(object pipelineContext)
-        {
-            await _asyncInvoker.Invoke(PipelineObserver, pipelineContext);
-        }
-
-        private delegate Task AsyncInvokeHandler(object observer, object pipelineContext);
+        return this;
     }
 }

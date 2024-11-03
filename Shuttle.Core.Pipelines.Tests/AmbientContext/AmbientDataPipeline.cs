@@ -1,8 +1,10 @@
-﻿namespace Shuttle.Core.Pipelines.Tests;
+﻿using System;
+
+namespace Shuttle.Core.Pipelines.Tests;
 
 public class AmbientDataPipeline : Pipeline
 {
-    public AmbientDataPipeline(IAmbientDataService ambientDataService)
+    public AmbientDataPipeline(IServiceProvider serviceProvider, IAmbientDataService ambientDataService) : base(serviceProvider)
     {
         RegisterStage("Pipeline")
             .WithEvent<OnAddValue>()

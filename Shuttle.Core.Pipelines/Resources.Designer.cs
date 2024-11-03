@@ -61,6 +61,15 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mapped delegates have to be async..
+        /// </summary>
+        public static string AsyncDelegateRequiredException {
+            get {
+                return ResourceManager.GetString("AsyncDelegateRequiredException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the constructor for type &apos;{0}&apos;..
         /// </summary>
         public static string ContextConstructorException {
@@ -111,6 +120,15 @@ namespace Shuttle.Core.Pipelines {
         public static string ObserverMethodNotFoundException {
             get {
                 return ResourceManager.GetString("ObserverMethodNotFoundException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The delegate is mapped to event type `{0}` but requesting `IPipelineContext&lt;{1}&gt;`..
+        /// </summary>
+        public static string PipelineContextTypeException {
+            get {
+                return ResourceManager.GetString("PipelineContextTypeException", resourceCulture);
             }
         }
         

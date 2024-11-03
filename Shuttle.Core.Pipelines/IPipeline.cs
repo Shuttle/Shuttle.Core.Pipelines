@@ -22,6 +22,8 @@ public interface IPipeline
     event EventHandler<PipelineEventArgs> PipelineCompleted;
     event EventHandler<PipelineEventArgs> PipelineStarting;
     IPipeline RegisterObserver(IPipelineObserver pipelineObserver);
+    IPipeline RegisterObserver(Type observerType);
+    IPipeline MapObserver<TPipelineEvent>(Delegate handler) where TPipelineEvent : class;
     IPipelineStage RegisterStage(string name);
     event EventHandler<PipelineEventArgs> StageCompleted;
     event EventHandler<PipelineEventArgs> StageStarting;
