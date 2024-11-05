@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Shuttle.Core.Pipelines;
 
-internal class ObserverDelegate
+public class ObserverDelegate
 {
     private static readonly Type PipelineContextType = typeof(IPipelineContext<>);
     private readonly IEnumerable<Type> _parameterTypes;
