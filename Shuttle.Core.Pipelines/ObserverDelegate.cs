@@ -6,11 +6,12 @@ using System.Linq;
 
 namespace Shuttle.Core.Pipelines;
 
-internal class MappedDelegate
+internal class ObserverDelegate
 {
+    private readonly Type _pipelineContextType = typeof(IPipelineContext<>);
     private readonly IEnumerable<Type> _parameterTypes;
 
-    public MappedDelegate(Delegate handler, IEnumerable<Type> parameterTypes)
+    public ObserverDelegate(Delegate handler, IEnumerable<Type> parameterTypes)
     {
         Handler = handler;
         HasParameters = parameterTypes.Any();
@@ -23,7 +24,7 @@ internal class MappedDelegate
     public object[] GetParameters(IServiceProvider serviceProvider, object pipelineContext)
     {
         return _parameterTypes
-            .Select(parameterType => !parameterType.IsCastableTo(typeof(IPipelineContext))
+            .Select(parameterType => !parameterType.IsCastableTo(_pipelineContextType)
                 ? serviceProvider.GetRequiredService(parameterType)
                 : pipelineContext
             ).ToArray();

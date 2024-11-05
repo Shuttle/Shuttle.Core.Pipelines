@@ -16,21 +16,21 @@ internal static class PipelineExtensions
 
     public static void MapObservers(this Pipeline pipeline)
     {
-        pipeline.MapObserver<MockPipelineEvent1>(async (IPipelineContext<MockPipelineEvent1> pipelineContext) =>
+        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent1> pipelineContext) =>
         {
             CallSequence(pipelineContext,"1");
 
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver<MockPipelineEvent2>(async (IPipelineContext<MockPipelineEvent2> pipelineContext) =>
+        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent2> pipelineContext) =>
         {
             CallSequence(pipelineContext, "2");
 
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver<MockPipelineEvent3>(async (IPipelineContext<MockPipelineEvent3> pipelineContext) =>
+        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent3> pipelineContext) =>
         {
             CallSequence(pipelineContext, "3");
 
@@ -61,19 +61,19 @@ public class PipelineDelegateFixture
 
         var callSequence = string.Empty;
 
-        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        pipeline.MapObserver(async () =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver<MockPipelineEvent2>(async () =>
+        pipeline.MapObserver(async () =>
         {
             callSequence += "2";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver<MockPipelineEvent3>(async () =>
+        pipeline.MapObserver(async () =>
         {
             callSequence += "3";
             await Task.CompletedTask;
@@ -120,23 +120,6 @@ public class PipelineDelegateFixture
     }
 
     [Test]
-    public void Should_not_be_able_to_register_delegate_requesting_wrong_event_type()
-    {
-        var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
-
-        pipeline.RegisterStage("Stage")
-            .WithEvent<MockPipelineEvent1>();
-
-        Assert.That(() =>
-        {
-            pipeline.MapObserver<MockPipelineEvent2>(async (IPipelineContext<MockPipelineEvent1> _) =>
-            {
-                await Task.CompletedTask;
-            });
-        }, Throws.Exception);
-    }
-
-    [Test]
     public async Task Should_be_able_to_register_multiple_delegates_for_the_same_event_type()
     {
         var services = new ServiceCollection();
@@ -155,19 +138,19 @@ public class PipelineDelegateFixture
 
         var callSequence = string.Empty;
 
-        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        pipeline.MapObserver(async (IPipelineContext< MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver<MockPipelineEvent1>(async () =>
+        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;

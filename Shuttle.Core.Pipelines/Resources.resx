@@ -172,6 +172,5 @@
   </data>
   <data name="PipelineContextTypeException" xml:space="preserve">
     <value>The delegate is mapped to event type `{0}` but requesting `IPipelineContext&lt;{1}&gt;`.</value>
-    <comment>0 = mapped event type name, 1 = requested event type name</comment>
   </data>
 </root>

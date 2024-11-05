@@ -11,7 +11,7 @@ namespace Shuttle.Core.Pipelines;
 
 public class Pipeline : IPipeline
 {
-    private readonly Dictionary<Type, List<MappedDelegate>> _delegates = new();
+    private readonly Dictionary<Type, List<ObserverDelegate>> _delegates = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly Dictionary<Type, List<PipelineObserverMethodInvoker>> _observerMethodInvokers = new();
 
@@ -72,7 +72,7 @@ public class Pipeline : IPipeline
         return RegisterObserver(new ServiceProviderPipelineObserverProvider(_serviceProvider, Guard.AgainstNull(observerType)));
     }
 
-    public IPipeline MapObserver<TPipelineEvent>(Delegate handler) where TPipelineEvent : class
+    public IPipeline MapObserver(Delegate handler)
     {
         if (!typeof(Task).IsAssignableFrom(Guard.AgainstNull(handler).Method.ReturnType))
         {
@@ -80,26 +80,25 @@ public class Pipeline : IPipeline
         }
 
         var parameters = handler.Method.GetParameters();
-        var pipelineEventType = typeof(TPipelineEvent);
+        Type? eventType = null;
 
         foreach (var parameter in parameters)
         {
             var parameterType = parameter.ParameterType;
 
-            if (parameterType.IsCastableTo(typeof(IPipelineContext)))
+            if (parameterType.IsCastableTo(typeof(IPipelineContext<>)))
             {
-                var genericArguments = parameterType.GetGenericArguments();
-
-                if (genericArguments.Length == 1 &&
-                    Guard.AgainstNull(genericArguments[0]) != pipelineEventType)
-                {
-                    throw new ArgumentException(string.Format(Resources.PipelineContextTypeException, pipelineEventType.Name, genericArguments[0].Name));
-                }
+                eventType = parameterType.GetGenericArguments()[0];
             }
         }
 
-        _delegates.TryAdd(pipelineEventType, new());
-        _delegates[pipelineEventType].Add(new(handler, handler.Method.GetParameters().Select(item => item.ParameterType)));
+        if (eventType == null)
+        {
+            throw new ApplicationException(Resources.PipelineContextTypeException);
+        }
+
+        _delegates.TryAdd(eventType, new());
+        _delegates[eventType].Add(new(handler, handler.Method.GetParameters().Select(item => item.ParameterType)));
 
         return this;
     }
@@ -162,8 +161,7 @@ public class Pipeline : IPipeline
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        await
-                            RaiseEventAsync(_onExecutionCancelledType, false).ConfigureAwait(false);
+                        await RaiseEventAsync(_onExecutionCancelledType, false).ConfigureAwait(false);
 
                         return false;
                     }
@@ -307,15 +305,15 @@ public class Pipeline : IPipeline
 
         if (hasDelegates)
         {
-            foreach (var mappedDelegate in delegatesForEvent!)
+            foreach (var observerDelegate in delegatesForEvent!)
             {
-                if (mappedDelegate.HasParameters)
+                if (observerDelegate.HasParameters)
                 {
-                    await (Task)mappedDelegate.Handler.DynamicInvoke(mappedDelegate.GetParameters(_serviceProvider, pipelineContext))!;
+                    await (Task)observerDelegate.Handler.DynamicInvoke(observerDelegate.GetParameters(_serviceProvider, pipelineContext))!;
                 }
                 else
                 {
-                    await (Task)mappedDelegate.Handler.DynamicInvoke()!;
+                    await (Task)observerDelegate.Handler.DynamicInvoke()!;
                 }
             }
         }
