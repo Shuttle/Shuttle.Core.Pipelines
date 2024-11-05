@@ -8,7 +8,7 @@ namespace Shuttle.Core.Pipelines;
 
 internal class ObserverDelegate
 {
-    private readonly Type _pipelineContextType = typeof(IPipelineContext<>);
+    private static readonly Type PipelineContextType = typeof(IPipelineContext<>);
     private readonly IEnumerable<Type> _parameterTypes;
 
     public ObserverDelegate(Delegate handler, IEnumerable<Type> parameterTypes)
@@ -24,7 +24,7 @@ internal class ObserverDelegate
     public object[] GetParameters(IServiceProvider serviceProvider, object pipelineContext)
     {
         return _parameterTypes
-            .Select(parameterType => !parameterType.IsCastableTo(_pipelineContextType)
+            .Select(parameterType => !parameterType.IsCastableTo(PipelineContextType)
                 ? serviceProvider.GetRequiredService(parameterType)
                 : pipelineContext
             ).ToArray();
