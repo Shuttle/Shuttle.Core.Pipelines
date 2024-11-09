@@ -62,17 +62,17 @@ public class Pipeline : IPipeline
 
     public IState State { get; }
 
-    public IPipeline RegisterObserver(IPipelineObserver pipelineObserver)
+    public IPipeline AddObserver(IPipelineObserver pipelineObserver)
     {
-        return RegisterObserver(new InstancePipelineObserverProvider(pipelineObserver));
+        return AddObserver(new InstancePipelineObserverProvider(pipelineObserver));
     }
 
-    public IPipeline RegisterObserver(Type observerType)
+    public IPipeline AddObserver(Type observerType)
     {
-        return RegisterObserver(new ServiceProviderPipelineObserverProvider(_serviceProvider, Guard.AgainstNull(observerType)));
+        return AddObserver(new ServiceProviderPipelineObserverProvider(_serviceProvider, Guard.AgainstNull(observerType)));
     }
 
-    public IPipeline MapObserver(Delegate handler)
+    public IPipeline AddObserver(Delegate handler)
     {
         if (!typeof(Task).IsAssignableFrom(Guard.AgainstNull(handler).Method.ReturnType))
         {
@@ -113,7 +113,7 @@ public class Pipeline : IPipeline
         ExceptionHandled = true;
     }
 
-    public IPipelineStage RegisterStage(string name)
+    public IPipelineStage AddStage(string name)
     {
         var stage = new PipelineStage(Guard.AgainstNullOrEmptyString(name));
 
@@ -319,7 +319,7 @@ public class Pipeline : IPipeline
         }
     }
 
-    private IPipeline RegisterObserver(IPipelineObserverProvider pipelineObserverProvider)
+    private IPipeline AddObserver(IPipelineObserverProvider pipelineObserverProvider)
     {
         var observerType = pipelineObserverProvider.GetObserverType();
         var observerInterfaces = observerType.GetInterfaces();

@@ -2,7 +2,7 @@
 
 namespace Shuttle.Core.Pipelines;
 
-public interface IRegisterEventBefore
+public interface IAddEventBefore
 {
-    void Register<TPipelineEvent>() where TPipelineEvent : class, new();
+    void Add<TPipelineEvent>() where TPipelineEvent : class, new();
 }

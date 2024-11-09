@@ -22,12 +22,12 @@ public class PipelineObserverFixture
         var pipeline = new Pipeline(serviceProvider);
 
         pipeline
-            .RegisterStage("Stage")
+            .AddStage("Stage")
             .WithEvent<MockPipelineEvent1>()
             .WithEvent<MockPipelineEvent2>()
             .WithEvent<MockPipelineEvent3>();
 
-        pipeline.RegisterObserver<MockAuthenticateObserver>();
+        pipeline.AddObserver<MockAuthenticateObserver>();
 
         await pipeline.ExecuteAsync(CancellationToken.None);
 
@@ -42,14 +42,14 @@ public class PipelineObserverFixture
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
         pipeline
-            .RegisterStage("Stage")
+            .AddStage("Stage")
             .WithEvent<MockPipelineEvent1>()
             .WithEvent<MockPipelineEvent2>()
             .WithEvent<MockPipelineEvent3>();
 
         var observer = new MockAuthenticateObserver();
 
-        pipeline.RegisterObserver(observer);
+        pipeline.AddObserver(observer);
 
         await pipeline.ExecuteAsync(CancellationToken.None);
 
@@ -61,14 +61,14 @@ public class PipelineObserverFixture
     {
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
-        pipeline.RegisterStage("Stage")
+        pipeline.AddStage("Stage")
             .WithEvent<MockPipelineEvent3>()
-            .AfterEvent<MockPipelineEvent3>().Register<MockPipelineEvent2>()
-            .AfterEvent<MockPipelineEvent2>().Register<MockPipelineEvent1>();
+            .AfterEvent<MockPipelineEvent3>().Add<MockPipelineEvent2>()
+            .AfterEvent<MockPipelineEvent2>().Add<MockPipelineEvent1>();
 
         var observer = new MockAuthenticateObserver();
 
-        pipeline.RegisterObserver(observer);
+        pipeline.AddObserver(observer);
 
         await pipeline.ExecuteAsync(CancellationToken.None);
 
@@ -80,15 +80,15 @@ public class PipelineObserverFixture
     {
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
-        pipeline.RegisterStage("Stage")
+        pipeline.AddStage("Stage")
             .WithEvent<MockPipelineEvent1>();
 
-        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent1>().Register<MockPipelineEvent2>();
-        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent2>().Register<MockPipelineEvent3>();
+        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent1>().Add<MockPipelineEvent2>();
+        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent2>().Add<MockPipelineEvent3>();
 
         var observer = new MockAuthenticateObserver();
 
-        pipeline.RegisterObserver(observer);
+        pipeline.AddObserver(observer);
 
         await pipeline.ExecuteAsync(CancellationToken.None);
 
@@ -101,9 +101,9 @@ public class PipelineObserverFixture
         Assert.Throws<InvalidOperationException>(
             () =>
                 new Pipeline(new Mock<IServiceProvider>().Object)
-                    .RegisterStage("Stage")
+                    .AddStage("Stage")
                     .AfterEvent<MockPipelineEvent1>()
-                    .Register<MockPipelineEvent2>());
+                    .Add<MockPipelineEvent2>());
     }
 
     [Test]
@@ -112,9 +112,9 @@ public class PipelineObserverFixture
         Assert.Throws<InvalidOperationException>(
             () =>
                 new Pipeline(new Mock<IServiceProvider>().Object)
-                    .RegisterStage("Stage")
+                    .AddStage("Stage")
                     .BeforeEvent<MockPipelineEvent1>()
-                    .Register<MockPipelineEvent2>());
+                    .Add<MockPipelineEvent2>());
     }
 
     [Test]
@@ -122,12 +122,12 @@ public class PipelineObserverFixture
     {
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
-        pipeline.RegisterStage("Stage")
+        pipeline.AddStage("Stage")
             .WithEvent<MockPipelineEvent1>();
 
         var interfacedObserver = new InterfacedObserver();
 
-        pipeline.RegisterObserver(interfacedObserver);
+        pipeline.AddObserver(interfacedObserver);
 
         await pipeline.ExecuteAsync(CancellationToken.None);
 

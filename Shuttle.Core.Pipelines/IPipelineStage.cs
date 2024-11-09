@@ -7,8 +7,8 @@ public interface IPipelineStage
 {
     IEnumerable<Type> Events { get; }
     string Name { get; }
-    IRegisterEventAfter AfterEvent<TEvent>() where TEvent : class;
-    IRegisterEventBefore BeforeEvent<TEvent>() where TEvent : class;
+    IAddEventAfter AfterEvent<TEvent>() where TEvent : class;
+    IAddEventBefore BeforeEvent<TEvent>() where TEvent : class;
     IPipelineStage WithEvent<TEvent>() where TEvent : class;
 }
     

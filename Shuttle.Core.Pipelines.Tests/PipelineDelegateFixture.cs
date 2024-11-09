@@ -16,21 +16,21 @@ internal static class PipelineExtensions
 
     public static void MapObservers(this Pipeline pipeline)
     {
-        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent1> pipelineContext) =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent1> pipelineContext) =>
         {
             CallSequence(pipelineContext,"1");
 
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent2> pipelineContext) =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent2> pipelineContext) =>
         {
             CallSequence(pipelineContext, "2");
 
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent3> pipelineContext) =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent3> pipelineContext) =>
         {
             CallSequence(pipelineContext, "3");
 
@@ -54,26 +54,26 @@ public class PipelineDelegateFixture
         var pipeline = new Pipeline(serviceProvider);
 
         pipeline
-            .RegisterStage("Stage")
+            .AddStage("Stage")
             .WithEvent<MockPipelineEvent1>()
             .WithEvent<MockPipelineEvent2>()
             .WithEvent<MockPipelineEvent3>();
 
         var callSequence = string.Empty;
 
-        pipeline.MapObserver(async () =>
+        pipeline.AddObserver(async () =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver(async () =>
+        pipeline.AddObserver(async () =>
         {
             callSequence += "2";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver(async () =>
+        pipeline.AddObserver(async () =>
         {
             callSequence += "3";
             await Task.CompletedTask;
@@ -89,10 +89,10 @@ public class PipelineDelegateFixture
     {
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
-        pipeline.RegisterStage("Stage")
+        pipeline.AddStage("Stage")
             .WithEvent<MockPipelineEvent3>()
-            .AfterEvent<MockPipelineEvent3>().Register<MockPipelineEvent2>()
-            .AfterEvent<MockPipelineEvent2>().Register<MockPipelineEvent1>();
+            .AfterEvent<MockPipelineEvent3>().Add<MockPipelineEvent2>()
+            .AfterEvent<MockPipelineEvent2>().Add<MockPipelineEvent1>();
 
         pipeline.MapObservers();
 
@@ -106,11 +106,11 @@ public class PipelineDelegateFixture
     {
         var pipeline = new Pipeline(new Mock<IServiceProvider>().Object);
 
-        pipeline.RegisterStage("Stage")
+        pipeline.AddStage("Stage")
             .WithEvent<MockPipelineEvent1>();
 
-        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent1>().Register<MockPipelineEvent2>();
-        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent2>().Register<MockPipelineEvent3>();
+        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent1>().Add<MockPipelineEvent2>();
+        pipeline.GetStage("Stage").BeforeEvent<MockPipelineEvent2>().Add<MockPipelineEvent3>();
 
         pipeline.MapObservers();
 
@@ -131,26 +131,26 @@ public class PipelineDelegateFixture
         var pipeline = new Pipeline(serviceProvider);
 
         pipeline
-            .RegisterStage("Stage")
+            .AddStage("Stage")
             .WithEvent<MockPipelineEvent1>()
             .WithEvent<MockPipelineEvent2>()
             .WithEvent<MockPipelineEvent3>();
 
         var callSequence = string.Empty;
 
-        pipeline.MapObserver(async (IPipelineContext< MockPipelineEvent1> _) =>
+        pipeline.AddObserver(async (IPipelineContext< MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.MapObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;

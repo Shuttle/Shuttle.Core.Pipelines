@@ -6,11 +6,11 @@ public class AmbientDataPipeline : Pipeline
 {
     public AmbientDataPipeline(IServiceProvider serviceProvider, IAmbientDataService ambientDataService) : base(serviceProvider)
     {
-        RegisterStage("Pipeline")
+        AddStage("Pipeline")
             .WithEvent<OnAddValue>()
             .WithEvent<OnGetValue>()
             .WithEvent<OnRemoveValue>();
 
-        RegisterObserver(new AmbientDataObserver(ambientDataService));
+        AddObserver(new AmbientDataObserver(ambientDataService));
     }
 }

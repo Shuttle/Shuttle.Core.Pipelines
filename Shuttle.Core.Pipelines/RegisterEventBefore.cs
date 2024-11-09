@@ -4,18 +4,18 @@ using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines;
 
-public class RegisterEventBefore : IRegisterEventBefore
+public class AddEventBefore : IAddEventBefore
 {
     private readonly List<Type> _eventsToExecute;
     private readonly Type _pipelineEvent;
 
-    public RegisterEventBefore(List<Type> eventsToExecute, Type pipelineEvent)
+    public AddEventBefore(List<Type> eventsToExecute, Type pipelineEvent)
     {
         _eventsToExecute = Guard.AgainstNull(eventsToExecute);
         _pipelineEvent = Guard.AgainstNull(pipelineEvent);
     }
 
-    public void Register<TPipelineEvent>() where TPipelineEvent : class, new()
+    public void Add<TPipelineEvent>() where TPipelineEvent : class, new()
     {
         var index = _eventsToExecute.IndexOf(_pipelineEvent);
 

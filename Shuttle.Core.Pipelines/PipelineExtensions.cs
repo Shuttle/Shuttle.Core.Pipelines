@@ -4,8 +4,8 @@ namespace Shuttle.Core.Pipelines;
 
 public static class PipelineExtensions
 {
-    public static IPipeline RegisterObserver<T>(this IPipeline pipeline)
+    public static IPipeline AddObserver<T>(this IPipeline pipeline)
     {
-        return Guard.AgainstNull(pipeline).RegisterObserver(typeof(T));
+        return Guard.AgainstNull(pipeline).AddObserver(typeof(T));
     }
 }

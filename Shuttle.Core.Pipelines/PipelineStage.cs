@@ -38,7 +38,7 @@ public class PipelineStage : IPipelineStage
         return this;
     }
 
-    public IRegisterEventBefore BeforeEvent<TEvent>() where TEvent : class
+    public IAddEventBefore BeforeEvent<TEvent>() where TEvent : class
     {
         var eventName = typeof(TEvent).FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name));
         var pipelineEvent = PipelineEvents.Find(e => (e.FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name))).Equals(eventName));
@@ -48,10 +48,10 @@ public class PipelineStage : IPipelineStage
             throw new InvalidOperationException(string.Format(Resources.PipelineStageEventNotRegistered, Name, eventName));
         }
 
-        return new RegisterEventBefore(PipelineEvents, pipelineEvent);
+        return new AddEventBefore(PipelineEvents, pipelineEvent);
     }
 
-    public IRegisterEventAfter AfterEvent<TEvent>() where TEvent : class
+    public IAddEventAfter AfterEvent<TEvent>() where TEvent : class
     {
         var eventName = typeof(TEvent).FullName;
         var pipelineEvent = PipelineEvents.Find(e => (e.FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name))).Equals(eventName));
@@ -61,6 +61,6 @@ public class PipelineStage : IPipelineStage
             throw new InvalidOperationException(string.Format(Resources.PipelineStageEventNotRegistered, Name, eventName));
         }
 
-        return new RegisterEventAfter(this, PipelineEvents, pipelineEvent);
+        return new AddEventAfter(this, PipelineEvents, pipelineEvent);
     }
 }
