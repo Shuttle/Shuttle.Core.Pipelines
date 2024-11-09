@@ -94,7 +94,7 @@ public class Pipeline : IPipeline
 
         if (eventType == null)
         {
-            throw new ApplicationException(Resources.PipelineContextTypeException);
+            throw new ApplicationException(Resources.PipelineDelegateTypeException);
         }
 
         _delegates.TryAdd(eventType, new());

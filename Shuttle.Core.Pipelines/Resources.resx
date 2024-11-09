@@ -170,7 +170,7 @@
   <data name="AsyncDelegateRequiredException" xml:space="preserve">
     <value>Mapped delegates have to be async.</value>
   </data>
-  <data name="PipelineContextTypeException" xml:space="preserve">
-    <value>The delegate is mapped to event type `{0}` but requesting `IPipelineContext&lt;{1}&gt;`.</value>
+  <data name="PipelineDelegateTypeException" xml:space="preserve">
+    <value>The delegate must contain a parameter of type `IPipelineContext&lt;T&gt;`.</value>
   </data>
 </root>

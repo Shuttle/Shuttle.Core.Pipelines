@@ -61,19 +61,19 @@ public class PipelineDelegateFixture
 
         var callSequence = string.Empty;
 
-        pipeline.AddObserver(async () =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent1> _) =>
         {
             callSequence += "1";
             await Task.CompletedTask;
         });
 
-        pipeline.AddObserver(async () =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent2> _) =>
         {
             callSequence += "2";
             await Task.CompletedTask;
         });
 
-        pipeline.AddObserver(async () =>
+        pipeline.AddObserver(async (IPipelineContext<MockPipelineEvent3> _) =>
         {
             callSequence += "3";
             await Task.CompletedTask;

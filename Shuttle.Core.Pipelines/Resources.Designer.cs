@@ -124,11 +124,11 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The delegate is mapped to event type `{0}` but requesting `IPipelineContext&lt;{1}&gt;`..
+        ///   Looks up a localized string similar to The delegate must contain a parameter of type `IPipelineContext&lt;T&gt;`..
         /// </summary>
-        public static string PipelineContextTypeException {
+        public static string PipelineDelegateTypeException {
             get {
-                return ResourceManager.GetString("PipelineContextTypeException", resourceCulture);
+                return ResourceManager.GetString("PipelineDelegateTypeException", resourceCulture);
             }
         }
         
