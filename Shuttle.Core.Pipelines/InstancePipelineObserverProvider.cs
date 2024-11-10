@@ -1,3 +1,4 @@
+using Shuttle.Core.Contract;
 using System;
 
 namespace Shuttle.Core.Pipelines;
@@ -9,7 +10,7 @@ internal class InstancePipelineObserverProvider : IPipelineObserverProvider
 
     public InstancePipelineObserverProvider(IPipelineObserver pipelineObserver)
     {
-        _pipelineObserver = pipelineObserver;
+        _pipelineObserver = Guard.AgainstNull(pipelineObserver);
         _type = pipelineObserver.GetType();
     }
 

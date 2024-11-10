@@ -97,6 +97,15 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not resolve pipeline observer type &apos;{0}&apos;.  Please ensure that it has been registered in the ServiceCollection..
+        /// </summary>
+        public static string MissingPipelineObserverException {
+            get {
+                return ResourceManager.GetString("MissingPipelineObserverException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The IComponentResolver implementation returned null for pipeline of type &apos;{0}&apos;..
         /// </summary>
         public static string NullPipelineException {

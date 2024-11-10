@@ -15,7 +15,12 @@ internal class ServiceProviderPipelineObserverProvider : IPipelineObserverProvid
 
     public IPipelineObserver GetObserverInstance()
     {
-        return (IPipelineObserver)_serviceProvider.GetService(_type)!;
+        if (_serviceProvider.GetService(_type) is not IPipelineObserver result)
+        {
+            throw new InvalidOperationException(string.Format(Resources.MissingPipelineObserverException, _type.FullName));
+        }
+
+        return result;
     }
 
     public Type GetObserverType()

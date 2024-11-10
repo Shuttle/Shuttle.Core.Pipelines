@@ -173,4 +173,7 @@
   <data name="PipelineDelegateTypeException" xml:space="preserve">
     <value>The delegate must contain a parameter of type `IPipelineContext&lt;T&gt;`.</value>
   </data>
+  <data name="MissingPipelineObserverException" xml:space="preserve">
+    <value>Could not resolve pipeline observer type '{0}'.  Please ensure that it has been registered in the ServiceCollection.</value>
+  </data>
 </root>
