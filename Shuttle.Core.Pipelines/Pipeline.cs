@@ -11,6 +11,9 @@ namespace Shuttle.Core.Pipelines;
 
 public class Pipeline : IPipeline
 {
+    private static readonly Type PipelineObserverType = typeof(IPipelineObserver<>);
+    private static readonly Type PipelineContextType = typeof(IPipelineContext<>);
+
     private readonly Dictionary<Type, List<ObserverDelegate>> _delegates = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly Dictionary<Type, List<PipelineObserverMethodInvoker>> _observerMethodInvokers = new();
@@ -23,7 +26,6 @@ public class Pipeline : IPipeline
     private readonly Dictionary<Type, PipelineContextConstructorInvoker> _pipelineContextConstructors = new();
 
     private readonly PipelineEventArgs _pipelineEventArgs;
-    private readonly Type _pipelineObserverType = typeof(IPipelineObserver<>);
 
     private readonly string _raisingPipelineEvent = Resources.VerboseRaisingPipelineEvent;
     private readonly IServiceProvider _serviceProvider;
@@ -86,7 +88,7 @@ public class Pipeline : IPipeline
         {
             var parameterType = parameter.ParameterType;
 
-            if (parameterType.IsCastableTo(typeof(IPipelineContext<>)))
+            if (parameterType.IsCastableTo(PipelineContextType))
             {
                 eventType = parameterType.GetGenericArguments()[0];
             }
@@ -322,15 +324,9 @@ public class Pipeline : IPipeline
     private IPipeline AddObserver(IPipelineObserverProvider pipelineObserverProvider)
     {
         var observerType = pipelineObserverProvider.GetObserverType();
-        var observerInterfaces = observerType.GetInterfaces();
 
-        var eventInterfaces = observerInterfaces
-            .Where(item =>
-                item.IsGenericType &&
-                _pipelineObserverType.GetTypeInfo().IsAssignableFrom(item.GetGenericTypeDefinition()) &&
-                item.Name.StartsWith("IPipelineObserver`"));
-
-        foreach (var eventInterface in eventInterfaces)
+        foreach (var eventInterface in observerType.GetInterfaces()
+                     .Where(item => item.IsGenericType && item.GetGenericTypeDefinition().IsAssignableFrom(PipelineObserverType)))
         {
             var pipelineEventType = eventInterface.GetGenericArguments()[0];
 
@@ -339,7 +335,7 @@ public class Pipeline : IPipeline
                 _observerMethodInvokers.Add(pipelineEventType, new());
             }
 
-            var genericType = _pipelineObserverType.MakeGenericType(pipelineEventType);
+            var genericType = PipelineObserverType.MakeGenericType(pipelineEventType);
 
             var methodInfo = observerType.GetInterfaceMap(genericType).TargetMethods.SingleOrDefault();
 
