@@ -176,4 +176,8 @@
   <data name="MissingPipelineObserverException" xml:space="preserve">
     <value>Could not resolve pipeline observer type '{0}'.  Please ensure that it has been registered in the ServiceCollection.</value>
   </data>
+  <data name="ExceptionHandlerException" xml:space="preserve">
+    <value>[FATAL] : An exception occurred while raising the 'OnPipelineException' event.  Please ensure that exceptions do not bubble up in exception handlers.</value>
+    <comment>0 = </comment>
+  </data>
 </root>

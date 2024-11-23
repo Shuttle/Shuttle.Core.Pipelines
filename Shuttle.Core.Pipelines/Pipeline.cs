@@ -295,6 +295,13 @@ public class Pipeline : IPipeline
                 }
                 catch (Exception ex)
                 {
+                    if (eventType == _onPipelineExceptionType)
+                    {
+                        Console.WriteLine(Resources.ExceptionHandlerException);
+                        Console.WriteLine(ex.Message);
+                        Environment.Exit(1);
+                    }
+
                     throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observer.PipelineObserverProvider.GetType().FullName), ex);
                 }
 
@@ -309,13 +316,32 @@ public class Pipeline : IPipeline
         {
             foreach (var observerDelegate in delegatesForEvent!)
             {
-                if (observerDelegate.HasParameters)
+                try
                 {
-                    await (Task)observerDelegate.Handler.DynamicInvoke(observerDelegate.GetParameters(_serviceProvider, pipelineContext))!;
+                    if (observerDelegate.HasParameters)
+                    {
+                        await (Task)observerDelegate.Handler.DynamicInvoke(observerDelegate.GetParameters(_serviceProvider, pipelineContext))!;
+                    }
+                    else
+                    {
+                        await (Task)observerDelegate.Handler.DynamicInvoke()!;
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    await (Task)observerDelegate.Handler.DynamicInvoke()!;
+                    if (eventType == _onPipelineExceptionType)
+                    {
+                        Console.WriteLine(Resources.ExceptionHandlerException);
+                        Console.WriteLine(ex.Message);
+                        Environment.Exit(1);
+                    }
+
+                    throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observerDelegate.GetType().FullName), ex);
+                }
+
+                if (Aborted && !ignoreAbort)
+                {
+                    return;
                 }
             }
         }
