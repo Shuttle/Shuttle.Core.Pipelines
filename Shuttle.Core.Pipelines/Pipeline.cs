@@ -299,6 +299,8 @@ public class Pipeline : IPipeline
                     {
                         Console.WriteLine(Resources.ExceptionHandlerException);
                         Console.WriteLine(ex.Message);
+                        await Console.Out.FlushAsync();
+
                         Environment.Exit(1);
                     }
 
@@ -333,6 +335,8 @@ public class Pipeline : IPipeline
                     {
                         Console.WriteLine(Resources.ExceptionHandlerException);
                         Console.WriteLine(ex.Message);
+                        await Console.Out.FlushAsync();
+
                         Environment.Exit(1);
                     }
 
