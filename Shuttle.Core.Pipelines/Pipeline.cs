@@ -54,6 +54,7 @@ public class Pipeline : IPipeline
     public event EventHandler<PipelineEventArgs>? StageCompleted;
     public event EventHandler<PipelineEventArgs>? PipelineStarting;
     public event EventHandler<PipelineEventArgs>? PipelineCompleted;
+    public event EventHandler<PipelineEventArgs>? PipelineRecursiveException;
 
     public Guid Id { get; }
     public bool ExceptionHandled { get; internal set; }
@@ -179,6 +180,19 @@ public class Pipeline : IPipeline
 
                     return false;
                 }
+                catch (RecursiveException)
+                {
+                    Abort();
+
+                    try
+                    {
+                        await RaiseEventAsync(_onAbortPipelineType, false).ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        // give up
+                    }
+                }
                 catch (Exception ex)
                 {
                     Exception = ex.TrimLeading<TargetInvocationException>();
@@ -297,14 +311,17 @@ public class Pipeline : IPipeline
                 {
                     if (eventType == _onPipelineExceptionType)
                     {
-                        Console.WriteLine(Resources.ExceptionHandlerException);
-                        Console.WriteLine(ex.Message);
-                        await Console.Out.FlushAsync();
+                        if (PipelineRecursiveException == null)
+                        {
+                            throw new RecursiveException(Resources.ExceptionHandlerRecursiveException, ex);
+                        }
 
-                        Environment.Exit(1);
+                        PipelineRecursiveException?.Invoke(this, _pipelineEventArgs);
                     }
-
-                    throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observer.PipelineObserverProvider.GetType().FullName), ex);
+                    else
+                    {
+                        throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observer.PipelineObserverProvider.GetType().FullName), ex);
+                    }
                 }
 
                 if (Aborted && !ignoreAbort)
@@ -333,14 +350,17 @@ public class Pipeline : IPipeline
                 {
                     if (eventType == _onPipelineExceptionType)
                     {
-                        Console.WriteLine(Resources.ExceptionHandlerException);
-                        Console.WriteLine(ex.Message);
-                        await Console.Out.FlushAsync();
+                        if (PipelineRecursiveException == null)
+                        {
+                            throw new RecursiveException(Resources.ExceptionHandlerRecursiveException, ex);
+                        }
 
-                        Environment.Exit(1);
+                        PipelineRecursiveException?.Invoke(this, _pipelineEventArgs);
                     }
-
-                    throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observerDelegate.GetType().FullName), ex);
+                    else
+                    {
+                        throw new PipelineException(string.Format(_raisingPipelineEvent, eventType.FullName, StageName, observerDelegate.GetType().FullName), ex);
+                    }
                 }
 
                 if (Aborted && !ignoreAbort)

@@ -90,9 +90,9 @@ namespace Shuttle.Core.Pipelines {
         /// <summary>
         ///   Looks up a localized string similar to [FATAL] : An exception occurred while raising the &apos;OnPipelineException&apos; event.  Please ensure that exceptions do not bubble up in exception handlers..
         /// </summary>
-        public static string ExceptionHandlerException {
+        public static string ExceptionHandlerRecursiveException {
             get {
-                return ResourceManager.GetString("ExceptionHandlerException", resourceCulture);
+                return ResourceManager.GetString("ExceptionHandlerRecursiveException", resourceCulture);
             }
         }
         

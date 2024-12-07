@@ -27,4 +27,5 @@ public interface IPipeline
     IPipelineStage AddStage(string name);
     event EventHandler<PipelineEventArgs> StageCompleted;
     event EventHandler<PipelineEventArgs> StageStarting;
+    event EventHandler<PipelineEventArgs> PipelineRecursiveException;
 }
