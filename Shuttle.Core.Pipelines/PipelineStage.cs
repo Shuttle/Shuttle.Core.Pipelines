@@ -48,7 +48,7 @@ public class PipelineStage : IPipelineStage
             throw new InvalidOperationException(string.Format(Resources.PipelineStageEventNotRegistered, Name, eventName));
         }
 
-        return new AddEventBefore(PipelineEvents, pipelineEvent);
+        return new AddEventBefore(this, PipelineEvents, pipelineEvent);
     }
 
     public IAddEventAfter AfterEvent<TEvent>() where TEvent : class
