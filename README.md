@@ -16,7 +16,7 @@ services.AddPipelineProcessing(builder => {
 });
 ```
 
-This will register the `IPipelineFactory` and, using the builder, add all `IPipeline` and `IPipelineObserver` implementations as `Transient`.  The pipeline instances are re-used as they are kept in a pool.
+This will register the `IPipelineFactory` and as `Singleton` and, using the builder, add all `IPipeline` imeplemtation as `Transient` and all `IPipelineObserver` implementations as `Singleton`.  The pipeline instances are re-used as they are kept in a pool.
 
 Since pipelines are quite frequently extended by adding observers, the recommended pattern is to make use of an `IHostedService` implementation that accepts the `IPipelineFactory` dependency:
 

@@ -176,7 +176,7 @@ public class Pipeline : IPipeline
                         continue;
                     }
 
-                    await RaiseEventAsync(_onAbortPipelineType, false).ConfigureAwait(false);
+                    await RaiseEventAsync(_onAbortPipelineType, true).ConfigureAwait(false);
 
                     return false;
                 }
@@ -186,7 +186,7 @@ public class Pipeline : IPipeline
 
                     try
                     {
-                        await RaiseEventAsync(_onAbortPipelineType, false).ConfigureAwait(false);
+                        await RaiseEventAsync(_onAbortPipelineType, true).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -211,7 +211,7 @@ public class Pipeline : IPipeline
                         continue;
                     }
 
-                    await RaiseEventAsync(_onAbortPipelineType, false).ConfigureAwait(false);
+                    await RaiseEventAsync(_onAbortPipelineType, true).ConfigureAwait(false);
 
                     return false;
                 }
