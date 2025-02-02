@@ -1,25 +1,19 @@
 ﻿using System.Threading.Tasks;
 
-namespace Shuttle.Core.Pipelines.Tests
+namespace Shuttle.Core.Pipelines.Tests;
+
+public class InterfacedObserver : IInterfacedObserver
 {
-    public class InterfacedObserver : IInterfacedObserver
+    public bool Called { get; private set; }
+
+    public async Task ExecuteAsync(IPipelineContext<MockPipelineEvent1> pipelineContext)
     {
-        public bool Called { get; private set; }
-        
-        public async Task ExecuteAsync(MockPipelineEvent1 pipelineEvent)
-        {
-            Called = true;
+        Called = true;
 
-            await Task.CompletedTask;
-        }
-
-        public void Execute(MockPipelineEvent1 pipelineEvent)
-        {
-            Called = true;
-        }
+        await Task.CompletedTask;
     }
+}
 
-    public interface IInterfacedObserver : IPipelineObserver<MockPipelineEvent1>
-    {
-    }
+public interface IInterfacedObserver : IPipelineObserver<MockPipelineEvent1>
+{
 }

@@ -1,8 +1,6 @@
-﻿namespace Shuttle.Core.Pipelines
+﻿namespace Shuttle.Core.Pipelines;
+
+public interface IAddEventAfter
 {
-    public interface IRegisterEventAfter
-    {
-        IPipelineStage Register<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new();
-        IPipelineStage Register(IPipelineEvent pipelineEventToRegister);
-    }
+    IPipelineStage Add<TPipelineEvent>() where TPipelineEvent : class, new();
 }

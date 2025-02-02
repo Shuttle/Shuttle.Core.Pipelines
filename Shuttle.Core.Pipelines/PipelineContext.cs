@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using Shuttle.Core.Contract;
 
 namespace Shuttle.Core.Pipelines;
 
-public class PipelineEventArgs : EventArgs
+public class PipelineContext<T> : IPipelineContext<T>
 {
-    public PipelineEventArgs(IPipeline pipeline)
+    public PipelineContext(IPipeline pipeline)
     {
         Pipeline = Guard.AgainstNull(pipeline);
     }
 
     public IPipeline Pipeline { get; }
+    public Type EventType => typeof(T);
 }

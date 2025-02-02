@@ -3,62 +3,64 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Shuttle.Core.Contract;
 
-namespace Shuttle.Core.Pipelines
+namespace Shuttle.Core.Pipelines;
+
+public class PipelineStage : IPipelineStage
 {
-    public class PipelineStage : IPipelineStage
+    protected readonly List<Type> PipelineEvents = new();
+
+    public PipelineStage(string name)
     {
-        protected readonly List<IPipelineEvent> PipelineEvents = new List<IPipelineEvent>();
+        Name = Guard.AgainstNull(name);
+        Events = new ReadOnlyCollection<Type>(PipelineEvents);
+    }
 
-        public PipelineStage(string name)
+    public string Name { get; }
+
+    public IEnumerable<Type> Events { get; }
+
+    public IPipelineStage WithEvent<TEvent>() where TEvent : class
+    {
+        return WithEvent(typeof(TEvent));
+    }
+
+    public IPipelineStage WithEvent(Type eventType)
+    {
+        Guard.AgainstNull(eventType);
+
+        if (PipelineEvents.Contains(eventType))
         {
-            Name = Guard.AgainstNull(name, nameof(name));
-            Events = new ReadOnlyCollection<IPipelineEvent>(PipelineEvents);
+            throw new InvalidOperationException(string.Format(Resources.PipelineStageEventAlreadyRegisteredException, Name, eventType.FullName));
         }
 
-        public string Name { get; }
+        PipelineEvents.Add(eventType);
 
-        public IEnumerable<IPipelineEvent> Events { get; }
+        return this;
+    }
 
-        public IPipelineStage WithEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
+    public IAddEventBefore BeforeEvent<TEvent>() where TEvent : class
+    {
+        var eventName = typeof(TEvent).FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name));
+        var pipelineEvent = PipelineEvents.Find(e => (e.FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name))).Equals(eventName));
+
+        if (pipelineEvent == null)
         {
-            return WithEvent(new TPipelineEvent());
+            throw new InvalidOperationException(string.Format(Resources.PipelineStageEventNotRegistered, Name, eventName));
         }
 
-        public IPipelineStage WithEvent(IPipelineEvent pipelineEvent)
-        {
-            PipelineEvents.Add(Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent)));
+        return new AddEventBefore(this, PipelineEvents, pipelineEvent);
+    }
 
-            return this;
+    public IAddEventAfter AfterEvent<TEvent>() where TEvent : class
+    {
+        var eventName = typeof(TEvent).FullName;
+        var pipelineEvent = PipelineEvents.Find(e => (e.FullName ?? throw new ApplicationException(string.Format(Reflection.Resources.TypeFullNameNullException, typeof(TEvent).Name))).Equals(eventName));
+
+        if (pipelineEvent == null)
+        {
+            throw new InvalidOperationException(string.Format(Resources.PipelineStageEventNotRegistered, Name, eventName));
         }
 
-        public IRegisterEventBefore BeforeEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
-        {
-            var eventName = typeof(TPipelineEvent).FullName;
-            var pipelineEvent = PipelineEvents.Find(e => e.Name.Equals(eventName));
-
-            if (pipelineEvent == null)
-            {
-                throw new InvalidOperationException(
-                    string.Format(Resources.PipelineStageEventNotRegistered,
-                        Name, eventName));
-            }
-
-            return new RegisterEventBefore(PipelineEvents, pipelineEvent);
-        }
-
-        public IRegisterEventAfter AfterEvent<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
-        {
-            var eventName = typeof(TPipelineEvent).FullName;
-            var pipelineEvent = PipelineEvents.Find(e => e.Name.Equals(eventName));
-
-            if (pipelineEvent == null)
-            {
-                throw new InvalidOperationException(
-                    string.Format(Resources.PipelineStageEventNotRegistered,
-                        Name, eventName));
-            }
-
-            return new RegisterEventAfter(this, PipelineEvents, pipelineEvent);
-        }
+        return new AddEventAfter(this, PipelineEvents, pipelineEvent);
     }
 }

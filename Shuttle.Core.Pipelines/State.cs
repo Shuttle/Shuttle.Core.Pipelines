@@ -1,50 +1,42 @@
-using System;
 using System.Collections.Generic;
 using Shuttle.Core.Contract;
 
-namespace Shuttle.Core.Pipelines
+namespace Shuttle.Core.Pipelines;
+
+public class State : IState
 {
-    public class State : IState
+    private readonly Dictionary<string, object?> _state = new();
+
+    public void Clear()
     {
-        private readonly Dictionary<string, object> _state = new Dictionary<string, object>();
+        _state.Clear();
+    }
 
-        public void Clear()
-        {
-            _state.Clear();
-        }
+    public void Add(string key, object? value)
+    {
+        _state.Add(Guard.AgainstNull(key), value);
+    }
 
-        public void Add(string key, object value)
-        {
-            Guard.AgainstNull(key, nameof(key));
+    public void Replace(string key, object? value)
+    {
+        Guard.AgainstNull(key);
 
-            _state.Add(key, value);
-        }
+        _state.Remove(key);
+        _state.Add(key, value);
+    }
 
-        public void Replace(string key, object value)
-        {
-            Guard.AgainstNull(key, nameof(key));
+    public object? Get(string key)
+    {
+        return _state.TryGetValue(Guard.AgainstNull(key), out var result) ? result : default;
+    }
 
-            _state.Remove(key);
-            _state.Add(key, value);
-        }
+    public bool Contains(string key)
+    {
+        return _state.ContainsKey(Guard.AgainstNull(key));
+    }
 
-        public object Get(string key)
-        {
-            Guard.AgainstNull(key, nameof(key));
-
-            return _state.TryGetValue(key, out var result) ? result : default;
-        }
-
-        public bool Contains(string key)
-        {
-            Guard.AgainstNull(key, nameof(key));
-
-            return _state.ContainsKey(key);
-        }
-
-        public bool Remove(string key)
-        {
-            return _state.Remove(key);
-        }
+    public bool Remove(string key)
+    {
+        return _state.Remove(key);
     }
 }

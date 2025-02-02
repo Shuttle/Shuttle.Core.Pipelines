@@ -16,7 +16,7 @@ services.AddPipelineProcessing(builder => {
 });
 ```
 
-This will register the `IPipelineFactory` and, using the builder, add all `IPipeline` and `IPipelineObserver` implementations as `Transient`.  The pipeline instances are re-used as they are kept in a pool.
+This will register the `IPipelineFactory` and as `Singleton` and, using the builder, add all `IPipeline` imeplemtation as `Transient` and all `IPipelineObserver` implementations as `Singleton`.  The pipeline instances are re-used as they are kept in a pool.
 
 Since pipelines are quite frequently extended by adding observers, the recommended pattern is to make use of an `IHostedService` implementation that accepts the `IPipelineFactory` dependency:
 
@@ -27,7 +27,7 @@ public class CustomHostedService : IHostedService
 
     public CustomHostedService(IPipelineFactory pipelineFactory)
     {
-        Guard.AgainstNull(pipelineFactory, nameof(pipelineFactory));
+        Guard.AgainstNull(pipelineFactory);
 
         pipelineFactory.PipelineCreated += PipelineCreated;
     }
@@ -39,7 +39,7 @@ public class CustomHostedService : IHostedService
             return;
         }
 
-        e.Pipeline.RegisterObserver(new SomeObserver());
+        e.Pipeline.AddObserver(new SomeObserver());
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -89,7 +89,7 @@ Console.WriteLine(state.Get<List<string>>()[0]);
 Console.Write(state.Get<string>("my-key"));
 ```
 
-The `Pipeline` class has a `RegisterStage` method that will return a `PipelineStage` instance.  The `PipelineStage` instance has a `WithEvent` method that will return a `PipelineStageEvent` instance.  This allows for a fluent interface to register events for a pipeline:
+The `Pipeline` class has a `AddStage` method that will return a `PipelineStage` instance.  The `PipelineStage` instance has a `WithEvent` method that will return a `PipelineStageEvent` instance.  This allows for a fluent interface to register events for a pipeline:
 
 ### IPipelineObserver
 
@@ -177,11 +177,11 @@ Next we will define the pipeline itself:
 ``` c#
 var pipeline = new Pipeline();
 
-pipeline.RegisterStage("process")
+pipeline.AddStage("process")
 	.WithEvent<OnAddCharacterA>()
 	.WithEvent(new OnAddCharacter('Z'));
 
-pipeline.RegisterObserver(new CharacterPipelineObserver());
+pipeline.AddObserver(new CharacterPipelineObserver());
 
 pipeline.State.Add("value", "start");
 

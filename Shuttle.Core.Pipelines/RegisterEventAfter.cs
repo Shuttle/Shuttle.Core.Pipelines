@@ -1,36 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Shuttle.Core.Contract;
 
-namespace Shuttle.Core.Pipelines
+namespace Shuttle.Core.Pipelines;
+
+public class AddEventAfter : IAddEventAfter
 {
-    public class RegisterEventAfter : IRegisterEventAfter
+    private readonly List<Type> _eventsToExecute;
+    private readonly Type _pipelineEvent;
+    private readonly IPipelineStage _pipelineStage;
+
+    public AddEventAfter(IPipelineStage pipelineStage, List<Type> eventsToExecute, Type pipelineEvent)
     {
-        private readonly List<IPipelineEvent> _eventsToExecute;
-        private readonly IPipelineEvent _pipelineEvent;
-        private readonly IPipelineStage _pipelineStage;
+        _pipelineStage = Guard.AgainstNull(pipelineStage);
+        _eventsToExecute = Guard.AgainstNull(eventsToExecute);
+        _pipelineEvent = Guard.AgainstNull(pipelineEvent);
+    }
 
-        public RegisterEventAfter(IPipelineStage pipelineStage, List<IPipelineEvent> eventsToExecute,
-            IPipelineEvent pipelineEvent)
-        {
-            _pipelineStage = Guard.AgainstNull(pipelineStage, nameof(pipelineStage));
-            _eventsToExecute = Guard.AgainstNull(eventsToExecute, nameof(eventsToExecute));
-            _pipelineEvent = Guard.AgainstNull(pipelineEvent, nameof(pipelineEvent));
-        }
+    public IPipelineStage Add<TPipelineEvent>() where TPipelineEvent : class, new()
+    {
+        var index = _eventsToExecute.IndexOf(_pipelineEvent);
 
-        public IPipelineStage Register<TPipelineEvent>() where TPipelineEvent : IPipelineEvent, new()
-        {
-            return Register(new TPipelineEvent());
-        }
+        _eventsToExecute.Insert(index + 1, typeof(TPipelineEvent));
 
-        public IPipelineStage Register(IPipelineEvent pipelineEventToRegister)
-        {
-            Guard.AgainstNull(pipelineEventToRegister, nameof(pipelineEventToRegister));
-
-            var index = _eventsToExecute.IndexOf(_pipelineEvent);
-
-            _eventsToExecute.Insert(index + 1, pipelineEventToRegister);
-
-            return _pipelineStage;
-        }
+        return _pipelineStage;
     }
 }

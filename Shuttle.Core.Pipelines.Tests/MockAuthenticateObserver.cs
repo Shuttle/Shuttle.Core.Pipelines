@@ -1,56 +1,40 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Shuttle.Core.Pipelines.Tests
+namespace Shuttle.Core.Pipelines.Tests;
+
+public class MockAuthenticateObserver :
+    IPipelineObserver<MockPipelineEvent1>,
+    IPipelineObserver<MockPipelineEvent2>,
+    IPipelineObserver<MockPipelineEvent3>
 {
-    public class MockAuthenticateObserver :
-        IPipelineObserver<MockPipelineEvent1>,
-        IPipelineObserver<MockPipelineEvent2>,
-        IPipelineObserver<MockPipelineEvent3>
+    public string CallSequence { get; private set; } = string.Empty;
+
+    public async Task ExecuteAsync(IPipelineContext<MockPipelineEvent1> pipelineContext)
     {
-        public string CallSequence { get; private set; } = string.Empty;
+        Execute(pipelineContext.EventType, 1);
 
-        private void Execute(PipelineEvent pipelineEvent, int delta)
-        {
-            Console.WriteLine(@"[collection] : {0}", pipelineEvent.Name);
+        await Task.CompletedTask;
+    }
 
-            CallSequence += delta.ToString();
-        }
+    public async Task ExecuteAsync(IPipelineContext<MockPipelineEvent2> pipelineContext)
+    {
+        Execute(pipelineContext.EventType, 2);
 
-        public void Execute(MockPipelineEvent1 pipelineEvent)
-        {
-            Execute(pipelineEvent, 1);
-        }
+        await Task.CompletedTask;
+    }
 
-        public async Task ExecuteAsync(MockPipelineEvent1 pipelineEvent)
-        {
-            Execute(pipelineEvent, 1);
-            
-            await Task.CompletedTask;
-        }
+    public async Task ExecuteAsync(IPipelineContext<MockPipelineEvent3> pipelineContext)
+    {
+        Execute(pipelineContext.EventType, 3);
 
-        public void Execute(MockPipelineEvent2 pipelineEvent)
-        {
-            Execute(pipelineEvent, 2);
-        }
+        await Task.CompletedTask;
+    }
 
-        public async Task ExecuteAsync(MockPipelineEvent2 pipelineEvent)
-        {
-            Execute(pipelineEvent, 2);
+    private void Execute(Type eventType, int delta)
+    {
+        Console.WriteLine(@"[collection] : {0}", eventType.Name);
 
-            await Task.CompletedTask;
-        }
-
-        public void Execute(MockPipelineEvent3 pipelineEvent)
-        {
-            Execute(pipelineEvent, 3);
-        }
-
-        public async Task ExecuteAsync(MockPipelineEvent3 pipelineEvent)
-        {
-            Execute(pipelineEvent, 3);
-
-            await Task.CompletedTask;
-        }
+        CallSequence += delta.ToString();
     }
 }

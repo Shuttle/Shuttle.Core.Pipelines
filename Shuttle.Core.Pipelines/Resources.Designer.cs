@@ -61,6 +61,24 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mapped delegates have to be async..
+        /// </summary>
+        public static string AsyncDelegateRequiredException {
+            get {
+                return ResourceManager.GetString("AsyncDelegateRequiredException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find the constructor for type &apos;{0}&apos;..
+        /// </summary>
+        public static string ContextConstructorException {
+            get {
+                return ResourceManager.GetString("ContextConstructorException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The IComponentResolver implementation returned the same pipeline instance of type &apos;{0}&apos;.  Since pipelines are not stateless that cannot be shared.  Please register the pipeline types as transient..
         /// </summary>
         public static string DuplicatePipelineInstanceException {
@@ -70,11 +88,29 @@ namespace Shuttle.Core.Pipelines {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [FATAL] : An exception occurred while raising the &apos;OnPipelineException&apos; event.  Please ensure that exceptions do not bubble up in exception handlers..
+        /// </summary>
+        public static string ExceptionHandlerRecursiveException {
+            get {
+                return ResourceManager.GetString("ExceptionHandlerRecursiveException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An `ExecutionScopeFactory` has already been set..
         /// </summary>
         public static string ExecutionScopeFactoryAlreadySetException {
             get {
                 return ResourceManager.GetString("ExecutionScopeFactoryAlreadySetException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve pipeline observer type &apos;{0}&apos;.  Please ensure that it has been registered in the ServiceCollection..
+        /// </summary>
+        public static string MissingPipelineObserverException {
+            get {
+                return ResourceManager.GetString("MissingPipelineObserverException", resourceCulture);
             }
         }
         
@@ -93,6 +129,42 @@ namespace Shuttle.Core.Pipelines {
         public static string ObserverInterfaceMissingException {
             get {
                 return ResourceManager.GetString("ObserverInterfaceMissingException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method &apos;ExecuteAsync()&apos; could not be found.
+        /// </summary>
+        public static string ObserverMethodNotFoundException {
+            get {
+                return ResourceManager.GetString("ObserverMethodNotFoundException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The delegate must contain a parameter of type `IPipelineContext&lt;T&gt;`..
+        /// </summary>
+        public static string PipelineDelegateTypeException {
+            get {
+                return ResourceManager.GetString("PipelineDelegateTypeException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not create an instance of type &apos;{0}&apos; that implements &apos;IPipelineEvent&apos;..
+        /// </summary>
+        public static string PipelineEventActivationException {
+            get {
+                return ResourceManager.GetString("PipelineEventActivationException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pipeline stage named &apos;{0}&apos; already has an event with name &apos;{1}&apos;..
+        /// </summary>
+        public static string PipelineStageEventAlreadyRegisteredException {
+            get {
+                return ResourceManager.GetString("PipelineStageEventAlreadyRegisteredException", resourceCulture);
             }
         }
         

@@ -1,15 +1,36 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
 
 namespace Shuttle.Core.Pipelines.Tests;
 
 public class StateFixture
 {
-    private class Item 
+    [Test]
+    public void Should_be_able_to_clear_state()
     {
-        public Guid Id { get; } = Guid.NewGuid();
+        var item = new Item();
+
+        var state = new State();
+
+        state.Add("key", "value-1");
+        state.Add(item);
+
+        Assert.That(state.Contains("key"), Is.True);
+        Assert.That(state.Get("key"), Is.EqualTo("value-1"));
+        Assert.That(state.Get<string>("key"), Is.EqualTo("value-1"));
+
+        Assert.That(state.Contains<Item>(), Is.True);
+        Assert.That(state.Get<Item>(), Is.Not.Null);
+        Assert.That(state.Get<Item>().Id, Is.EqualTo(item.Id));
+
+        state.Clear();
+
+        Assert.That(state.Contains("key"), Is.False);
+        Assert.That(state.Get("key"), Is.EqualTo(null));
+        Assert.That(state.Get<string>("key"), Is.EqualTo(null));
+
+        Assert.That(state.Contains<Item>(), Is.False);
+        Assert.That(state.Get<Item>(), Is.Null);
     }
 
     [Test]
@@ -61,31 +82,8 @@ public class StateFixture
         Assert.That(state.Get<Item>(), Is.Null);
     }
 
-    [Test]
-    public void Should_be_able_to_clear_state()
+    private class Item
     {
-        var item = new Item();
-
-        var state = new State();
-
-        state.Add("key", "value-1");
-        state.Add(item);
-
-        Assert.That(state.Contains("key"), Is.True);
-        Assert.That(state.Get("key"), Is.EqualTo("value-1"));
-        Assert.That(state.Get<string>("key"), Is.EqualTo("value-1"));
-
-        Assert.That(state.Contains<Item>(), Is.True);
-        Assert.That(state.Get<Item>(), Is.Not.Null);
-        Assert.That(state.Get<Item>().Id, Is.EqualTo(item.Id));
-
-        state.Clear();
-
-        Assert.That(state.Contains("key"), Is.False);
-        Assert.That(state.Get("key"), Is.EqualTo(null));
-        Assert.That(state.Get<string>("key"), Is.EqualTo(null));
-
-        Assert.That(state.Contains<Item>(), Is.False);
-        Assert.That(state.Get<Item>(), Is.Null);
+        public Guid Id { get; } = Guid.NewGuid();
     }
 }

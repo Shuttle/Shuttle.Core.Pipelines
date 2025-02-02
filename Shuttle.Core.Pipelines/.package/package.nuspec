@@ -3,7 +3,7 @@
 <package>
 	<metadata>
 		<id>Shuttle.Core.Pipelines</id>
-		<version>14.0.0</version>
+		<version>20.0.0</version>
 		<authors>Eben Roux</authors>
 		<owners>Eben Roux</owners>
 		<license type="expression">BSD-3-Clause</license>
@@ -13,14 +13,14 @@
 		<repository type="git" url="https://github.com/shuttle/Shuttle.Core.Pipelines.git" />
 		<projectUrl>https://github.com/shuttle/Shuttle.Core.Pipelines</projectUrl>
 		<description>Observable event-based pipelines based broadly on pipes and filters.</description>
-		<copyright>Copyright (c) 2024, Eben Roux</copyright>
+		<copyright>Copyright (c) 2025, Eben Roux</copyright>
 		<tags>shuttle</tags>
 		<dependencies>
-      <dependency id="Microsoft.Extensions.DependencyInjection" version="7.0.0" />
-      <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="7.0.0" />
-      <dependency id="Microsoft.Extensions.Options" version="7.0.1" />
-      <dependency id="Shuttle.Core.Contract" version="11.1.0" />
-      <dependency id="Shuttle.Core.Reflection" version="13.0.0" />
+      <dependency id="Microsoft.Extensions.DependencyInjection" version="8.0.1" />
+      <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="8.0.2" />
+      <dependency id="Microsoft.Extensions.Options" version="8.0.2" />
+      <dependency id="Shuttle.Core.Contract" version="20.0.0" />
+      <dependency id="Shuttle.Core.Reflection" version="20.0.0" />
       <dependency id="System.Reflection.Emit.Lightweight" version="4.7.0" />
 		</dependencies>
 	</metadata>

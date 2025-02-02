@@ -151,4 +151,33 @@
     <value>Raising pipeline event '{0}' in stage '{1}' for observer '{2}'.</value>
     <comment>0 = pipeline event name, 1 = pipeline stage name, 2 = observer name</comment>
   </data>
+  <data name="ObserverMethodNotFoundException" xml:space="preserve">
+    <value>Method 'ExecuteAsync()' could not be found</value>
+    <comment>0 = observer type name</comment>
+  </data>
+  <data name="PipelineEventActivationException" xml:space="preserve">
+    <value>Could not create an instance of type '{0}' that implements 'IPipelineEvent'.</value>
+    <comment>0 = type name</comment>
+  </data>
+  <data name="PipelineStageEventAlreadyRegisteredException" xml:space="preserve">
+    <value>Pipeline stage named '{0}' already has an event with name '{1}'.</value>
+    <comment>0 = stage name, 1 = event name</comment>
+  </data>
+  <data name="ContextConstructorException" xml:space="preserve">
+    <value>Could not find the constructor for type '{0}'.</value>
+    <comment>0 = full name of context type</comment>
+  </data>
+  <data name="AsyncDelegateRequiredException" xml:space="preserve">
+    <value>Mapped delegates have to be async.</value>
+  </data>
+  <data name="PipelineDelegateTypeException" xml:space="preserve">
+    <value>The delegate must contain a parameter of type `IPipelineContext&lt;T&gt;`.</value>
+  </data>
+  <data name="MissingPipelineObserverException" xml:space="preserve">
+    <value>Could not resolve pipeline observer type '{0}'.  Please ensure that it has been registered in the ServiceCollection.</value>
+  </data>
+  <data name="ExceptionHandlerRecursiveException" xml:space="preserve">
+    <value>[FATAL] : An exception occurred while raising the 'OnPipelineException' event.  Please ensure that exceptions do not bubble up in exception handlers.</value>
+    <comment>0 = </comment>
+  </data>
 </root>

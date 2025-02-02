@@ -1,72 +1,75 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Shuttle.Core.Contract;
 
-namespace Shuttle.Core.Pipelines
+namespace Shuttle.Core.Pipelines;
+
+public class PipelineFactory : IPipelineFactory
 {
-    public class PipelineFactory : IPipelineFactory
+    private readonly IServiceProvider _serviceProvider;
+    private ReusableObjectPool<object> _pool;
+    private readonly PipelineOptions _pipelineOptions;
+
+    public PipelineFactory(IOptions<PipelineOptions> pipelineOptions, IServiceProvider serviceProvider)
     {
-        private ReusableObjectPool<object> _pool;
-        private readonly IServiceProvider _serviceProvider;
+        _pipelineOptions = Guard.AgainstNull(pipelineOptions).Value;
+        _serviceProvider = Guard.AgainstNull(serviceProvider);
+        _pool = new();
+    }
 
-        public PipelineFactory(IServiceProvider serviceProvider)
+    public event EventHandler<PipelineEventArgs>? PipelineCreated;
+    public event EventHandler<PipelineEventArgs>? PipelineObtained;
+    public event EventHandler<PipelineEventArgs>? PipelineReleased;
+
+    public TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline
+    {
+        var pipeline = _pool.Get(typeof(TPipeline));
+
+        if (pipeline == null)
         {
-            _serviceProvider = Guard.AgainstNull(serviceProvider, nameof(serviceProvider));
-            _pool = new ReusableObjectPool<object>();
-        }
+            var type = typeof(TPipeline);
 
-        public event EventHandler<PipelineEventArgs> PipelineCreated;
-
-        public event EventHandler<PipelineEventArgs> PipelineObtained;
-
-        public event EventHandler<PipelineEventArgs> PipelineReleased;
-
-        public TPipeline GetPipeline<TPipeline>() where TPipeline : IPipeline
-        {
-            var pipeline = (TPipeline)_pool.Get(typeof(TPipeline));
+            pipeline = (TPipeline)_serviceProvider.GetRequiredService(type);
 
             if (pipeline == null)
             {
-                var type = typeof(TPipeline);
-
-                pipeline = (TPipeline)_serviceProvider.GetRequiredService(type);
-
-                if (pipeline == null)
-                {
-                    throw new InvalidOperationException(
-                        string.Format(Resources.NullPipelineException, type.FullName));
-                }
-
-                if (_pool.Contains(pipeline))
-                {
-                    throw new InvalidOperationException(
-                        string.Format(Resources.DuplicatePipelineInstanceException, type.FullName));
-                }
-
-                PipelineCreated?.Invoke(this, new PipelineEventArgs(pipeline));
+                throw new InvalidOperationException(string.Format(Resources.NullPipelineException, type.FullName));
             }
-            else
+
+            if (_pool.Contains(pipeline))
             {
-                PipelineObtained?.Invoke(this, new PipelineEventArgs(pipeline));
+                throw new InvalidOperationException(string.Format(Resources.DuplicatePipelineInstanceException, type.FullName));
             }
 
-            return pipeline;
+            PipelineCreated?.Invoke(this, new((TPipeline)pipeline));
         }
-
-        public void ReleasePipeline(IPipeline pipeline)
+        else
         {
-            Guard.AgainstNull(pipeline, nameof(pipeline));
-
-            _pool.Release(pipeline);
-
-            PipelineReleased?.Invoke(this, new PipelineEventArgs(pipeline));
+            PipelineObtained?.Invoke(this, new((TPipeline)pipeline));
         }
 
-        public void Flush()
+        return (TPipeline)pipeline;
+    }
+
+    public void ReleasePipeline(IPipeline pipeline)
+    {
+        if (!_pipelineOptions.ReusePipelines)
         {
-            _pool.Dispose();
-
-            _pool = new ReusableObjectPool<object>();
+            return;
         }
+
+        Guard.AgainstNull(pipeline);
+
+        _pool.Release(pipeline);
+
+        PipelineReleased?.Invoke(this, new(pipeline));
+    }
+
+    public void Flush()
+    {
+        _pool.Dispose();
+
+        _pool = new();
     }
 }
