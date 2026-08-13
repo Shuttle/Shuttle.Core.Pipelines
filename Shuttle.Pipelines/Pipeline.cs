@@ -174,12 +174,12 @@ public class Pipeline : IPipeline
                         LogEvent("RecursiveException");
                         await _pipelineOptions.PipelineRecursiveException.InvokeAsync(_pipelineEventArgs, cancellationToken);
                     }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
                     {
                         // give up
                     }
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException)
+                catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
                 {
                     Exception = ex.TrimLeading<TargetInvocationException>();
 
@@ -219,6 +219,17 @@ public class Pipeline : IPipeline
         await _pipelineOptions.PipelineCompleted.InvokeAsync(_pipelineEventArgs, cancellationToken).ConfigureAwait(false);
 
         return true;
+    }
+
+    /// <summary>
+    ///     Returns `true` when the given exception represents the cancellation of this pipeline execution; else `false`.
+    ///     An `OperationCanceledException` raised while no cancellation has been requested (such as the
+    ///     `TaskCanceledException` from an `HttpClient` timeout within an observer) is an ordinary failure and has to be
+    ///     routed through the `PipelineFailed` event so that it may be handled.
+    /// </summary>
+    private static bool IsCancellation(Exception exception, CancellationToken cancellationToken)
+    {
+        return exception is OperationCanceledException && cancellationToken.IsCancellationRequested;
     }
 
     private Pipeline AddObserver(IPipelineObserverProvider pipelineObserverProvider, ObserverPosition position)
@@ -306,7 +317,7 @@ public class Pipeline : IPipeline
                     {
                         await observer.InvokeAsync(pipelineContext, cancellationToken).ConfigureAwait(false);
                     }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
                     {
                         if (eventType == _pipelineFailedType)
                         {
@@ -343,7 +354,7 @@ public class Pipeline : IPipeline
                             await (Task)observerDelegate.Handler.DynamicInvoke()!;
                         }
                     }
-                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    catch (Exception ex) when (!IsCancellation(ex, cancellationToken))
                     {
                         if (eventType == _pipelineFailedType)
                         {
